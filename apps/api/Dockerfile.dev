@@ -1,4 +1,6 @@
-FROM python:3.12.5-alpine AS backend
+# Use BASE_IMAGE to override when Docker Hub is unreachable (e.g. use a mirror)
+ARG BASE_IMAGE=python:3.12.5-alpine
+FROM ${BASE_IMAGE} AS backend
 
 # set environment variables
 ENV PYTHONDONTWRITEBYTECODE 1
