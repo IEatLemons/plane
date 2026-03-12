@@ -10,11 +10,21 @@ services:
     command: ./bin/docker-entrypoint-api.sh
     env_file:
       - ../apps/api/.env
-    depends_on:
-      - plane-db
-      - plane-redis
     networks:
       - plane
+
+  # 固定监听 3001，转发到 api:8000，避免 api 重启时 3001 时有时无
+  api-gateway:
+    container_name: api-gateway
+    image: alpine/socat:latest
+    restart: always
+    command: TCP-LISTEN:3001,fork,reuseaddr TCP:api:8000
+    ports:
+      - "${API_PORT:-3001}:3001"
+    networks:
+      - plane
+    depends_on:
+      - api
 
   worker:
     container_name: bgworker
@@ -29,8 +39,6 @@ services:
       - ../apps/api/.env
     depends_on:
       - api
-      - plane-db
-      - plane-redis
     networks:
       - plane
 
@@ -47,8 +55,6 @@ services:
       - ../apps/api/.env
     depends_on:
       - api
-      - plane-db
-      - plane-redis
     networks:
       - plane
 
@@ -63,21 +69,6 @@ services:
     command: ./bin/docker-entrypoint-migrator.sh
     env_file:
       - ../apps/api/.env
-    depends_on:
-      - plane-db
-      - plane-redis
-    networks:
-      - plane
-
-  plane-db:
-    image: postgres:15.7-alpine
-    profiles: ["resources"]
-    networks:
-      - plane
-
-  plane-redis:
-    image: valkey/valkey:7.2.11-alpine
-    profiles: ["resources"]
     networks:
       - plane
 

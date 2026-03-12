@@ -59,8 +59,7 @@ services:
       dockerfile: Dockerfile.ce
     restart: always
     ports:
-      - ${LISTEN_HTTP_PORT}:80
-      - ${LISTEN_HTTPS_PORT}:443
+      - ${LISTEN_HTTP_PORT:-3000}:80
     env_file:
       - ../.env
     environment:
@@ -76,7 +75,6 @@ services:
 
   api:
     image: alpine:3.20
-    profiles: ["api"]
     command: ["sh", "-lc", "echo 'api is external; start plane-api compose' && sleep 3600"]
     networks:
       - plane

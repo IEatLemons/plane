@@ -3,7 +3,14 @@ import * as dotenv from "@dotenvx/dotenvx";
 import { reactRouter } from "@react-router/dev/vite";
 import { defineConfig } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
-import { joinUrlPath } from "@plane/utils";
+
+function joinUrlPath(...parts: string[]): string {
+  const cleaned = parts
+    .filter(Boolean)
+    .map((p) => p.replace(/(^\/+|\/+$)/g, ""))
+    .filter(Boolean);
+  return "/" + cleaned.join("/");
+}
 
 dotenv.config({ path: path.resolve(__dirname, ".env") });
 
@@ -15,10 +22,12 @@ const viteEnv = Object.keys(process.env)
     return a;
   }, {});
 
-const basePath = joinUrlPath(process.env.VITE_ADMIN_BASE_PATH ?? "", "/") ?? "/";
+const rawBasePath = joinUrlPath(process.env.VITE_ADMIN_BASE_PATH ?? "", "/") ?? "/";
+// Vite `base` should end with a trailing slash, otherwise it may emit paths like "/god-modeassets/...".
+const viteBasePath = rawBasePath === "/" ? "/" : `${rawBasePath}/`;
 
 export default defineConfig(() => ({
-  base: basePath,
+  base: viteBasePath,
   define: {
     "process.env": JSON.stringify(viteEnv),
   },

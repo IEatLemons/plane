@@ -80,3 +80,5 @@ export class RootStore {
     this.publishList = new PublishListStore(this);
   }
 }
+
+export type CoreRootStore = RootStore;

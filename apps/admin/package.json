@@ -7,9 +7,9 @@
   "type": "module",
   "scripts": {
     "dev": "react-router dev --port 3001",
-    "build": "react-router build",
-    "preview": "react-router build && serve -s build/client -l 3001",
-    "start": "serve -s build/client -l 3001",
+    "build": "react-router build && node ./scripts/postbuild-local-basepath.mjs",
+    "preview": "pnpm run build && serve -s build/client -l 3001",
+    "start": "node ./scripts/serve-local.mjs",
     "clean": "rm -rf .turbo && rm -rf .next && rm -rf node_modules && rm -rf dist && rm -rf build",
     "check:lint": "oxlint --max-warnings=759 .",
     "check:types": "react-router typegen && tsc --noEmit",
