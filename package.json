@@ -8,6 +8,8 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev --concurrency=18",
+    "dev:lowmem": "turbo run dev --concurrency=17",
+    "dev:web": "turbo run dev --filter=web --concurrency=4",
     "start": "turbo run start",
     "clean": "turbo run clean && rm -rf .turbo && rm -rf .next && rm -rf node_modules && rm -rf dist",
     "fix": "turbo run fix",
