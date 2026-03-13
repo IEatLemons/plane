@@ -63,62 +63,62 @@ services:
     ports:
       - "5432:5432"
 
-  # web:
-  #   build:
-  #     context: .
-  #     dockerfile: ./web/Dockerfile.dev
-  #   restart: unless-stopped
-  #   networks:
-  #     - dev_env
-  #   volumes:
-  #     - ./web:/app/web
-  #   env_file:
-  #     - ./web/.env
-  #   depends_on:
-  #     - api
-  #     - worker
+  web:
+    build:
+      context: .
+      dockerfile: ./apps/web/Dockerfile.dev
+    restart: unless-stopped
+    networks:
+      - dev_env
+    volumes:
+      - ./apps/web:/app/web
+    env_file:
+      - ./apps/web/.env
+    depends_on:
+      - api
+      - worker
 
-  # space:
-  #   build:
-  #     context: .
-  #     dockerfile: ./space/Dockerfile.dev
-  #   restart: unless-stopped
-  #   networks:
-  #     - dev_env
-  #   volumes:
-  #     - ./space:/app/space
-  #   depends_on:
-  #     - api
-  #     - worker
-  #     - web
+  space:
+    build:
+      context: .
+      dockerfile: ./apps/space/Dockerfile.dev
+    restart: unless-stopped
+    networks:
+      - dev_env
+    volumes:
+      - ./apps/space:/app/space
+    depends_on:
+      - api
+      - worker
+      - web
 
-  # admin:
-  #   build:
-  #     context: .
-  #     dockerfile: ./admin/Dockerfile.dev
-  #   restart: unless-stopped
-  #   networks:
-  #     - dev_env
-  #   volumes:
-  #     - ./admin:/app/admin
-  #   depends_on:
-  #     - api
-  #     - worker
-  #     - web
+  admin:
+    build:
+      context: .
+      dockerfile: ./apps/admin/Dockerfile.dev
+    restart: unless-stopped
+    networks:
+      - dev_env
+    volumes:
+      - ./apps/admin:/app/admin
+    depends_on:
+      - api
+      - worker
+      - web
 
-  # live:
-  #   build:
-  #     context: .
-  #     dockerfile: ./live/Dockerfile.dev
-  #   restart: unless-stopped
-  #   networks:
-  #     - dev_env
-  #   volumes:
-  #     - ./live:/app/live
-  #   depends_on:
-  #     - api
-  #     - worker
-  #     - web
+  live:
+    build:
+      context: .
+      dockerfile: ./apps/live/Dockerfile.dev
+    restart: unless-stopped
+    networks:
+      - dev_env
+    volumes:
+      - ./apps/live:/app/live
+    depends_on:
+      - api
+      - worker
+      - web
 
   api:
     build:
