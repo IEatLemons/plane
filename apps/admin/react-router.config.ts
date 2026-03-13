@@ -8,7 +8,9 @@ function joinUrlPath(...parts: string[]): string {
   return "/" + cleaned.join("/");
 }
 
-const basePath = joinUrlPath(process.env.VITE_ADMIN_BASE_PATH ?? "", "/") ?? "/";
+const rawBasePath = joinUrlPath(process.env.VITE_ADMIN_BASE_PATH ?? "", "/") ?? "/";
+// Keep basename aligned with Vite `base` (which ends with a trailing slash for non-root paths)
+const basePath = rawBasePath === "/" ? "/" : `${rawBasePath}/`;
 
 export default {
   appDirectory: "app",
