@@ -72,8 +72,12 @@ services:
       - dev_env
     volumes:
       - ./apps/web:/app/web
+    environment:
+      RR_DEV_SERVER_HOST: "0.0.0.0"
     env_file:
       - ./apps/web/.env
+    ports:
+      - "3000:3000"
     depends_on:
       - api
       - worker
@@ -87,6 +91,8 @@ services:
       - dev_env
     volumes:
       - ./apps/space:/app/space
+    ports:
+      - "3002:3002"
     depends_on:
       - api
       - worker
@@ -101,6 +107,8 @@ services:
       - dev_env
     volumes:
       - ./apps/admin:/app/admin
+    ports:
+      - "3001:3001"
     depends_on:
       - api
       - worker
@@ -115,6 +123,8 @@ services:
       - dev_env
     volumes:
       - ./apps/live:/app/live
+    ports:
+      - "3003:3003"
     depends_on:
       - api
       - worker
