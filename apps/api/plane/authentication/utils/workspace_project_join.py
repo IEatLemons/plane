@@ -2,6 +2,9 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # See the LICENSE file for details.
 
+# Python imports
+import logging
+
 # Django imports
 from django.utils import timezone
 
@@ -15,6 +18,8 @@ from plane.db.models import (
 from plane.utils.cache import invalidate_cache_directly
 from plane.bgtasks.event_tracking_task import track_event
 from plane.utils.analytics_events import USER_JOINED_WORKSPACE
+
+logger = logging.getLogger(__name__)
 
 
 def process_workspace_project_invitations(user):
@@ -42,18 +47,21 @@ def process_workspace_project_invitations(user):
             user=False,
             multiple=True,
         )
-        track_event.delay(
-            user_id=user.id,
-            event_name=USER_JOINED_WORKSPACE,
-            slug=workspace_member_invite.workspace.slug,
-            event_properties={
-                "user_id": user.id,
-                "workspace_id": workspace_member_invite.workspace.id,
-                "workspace_slug": workspace_member_invite.workspace.slug,
-                "role": workspace_member_invite.role,
-                "joined_at": str(timezone.now().isoformat()),
-            },
-        )
+        try:
+            track_event.delay(
+                user_id=user.id,
+                event_name=USER_JOINED_WORKSPACE,
+                slug=workspace_member_invite.workspace.slug,
+                event_properties={
+                    "user_id": user.id,
+                    "workspace_id": workspace_member_invite.workspace.id,
+                    "workspace_slug": workspace_member_invite.workspace.slug,
+                    "role": workspace_member_invite.role,
+                    "joined_at": str(timezone.now().isoformat()),
+                },
+            )
+        except Exception as exc:
+            logger.warning("track_event not queued (broker may be unavailable): %s", exc)
 
     # Check if user has any project invites
     project_member_invites = ProjectMemberInvite.objects.filter(email=user.email, accepted=True)

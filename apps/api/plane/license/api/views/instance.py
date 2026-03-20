@@ -36,16 +36,6 @@ class InstanceEndpoint(BaseAPIView):
     def get(self, request):
         instance = Instance.objects.first()
 
-        # get the instance
-        if instance is None:
-            return Response(
-                {"is_activated": False, "is_setup_done": False},
-                status=status.HTTP_200_OK,
-            )
-        # Return instance
-        serializer = InstanceSerializer(instance)
-        data = serializer.data
-        data["is_activated"] = True
         # Get all the configuration
         (
             ENABLE_SIGNUP,
@@ -136,55 +126,71 @@ class InstanceEndpoint(BaseAPIView):
             ]
         )
 
-        data = {}
+        config_data = {}
         # Authentication
-        data["enable_signup"] = ENABLE_SIGNUP == "1"
-        data["is_workspace_creation_disabled"] = DISABLE_WORKSPACE_CREATION == "1"
-        data["is_google_enabled"] = IS_GOOGLE_ENABLED == "1"
-        data["is_github_enabled"] = IS_GITHUB_ENABLED == "1"
-        data["is_gitlab_enabled"] = IS_GITLAB_ENABLED == "1"
-        data["is_gitea_enabled"] = IS_GITEA_ENABLED == "1"
-        data["is_magic_login_enabled"] = ENABLE_MAGIC_LINK_LOGIN == "1"
-        data["is_email_password_enabled"] = ENABLE_EMAIL_PASSWORD == "1"
+        config_data["enable_signup"] = ENABLE_SIGNUP == "1"
+        config_data["is_workspace_creation_disabled"] = DISABLE_WORKSPACE_CREATION == "1"
+        config_data["is_google_enabled"] = IS_GOOGLE_ENABLED == "1"
+        config_data["is_github_enabled"] = IS_GITHUB_ENABLED == "1"
+        config_data["is_gitlab_enabled"] = IS_GITLAB_ENABLED == "1"
+        config_data["is_gitea_enabled"] = IS_GITEA_ENABLED == "1"
+        config_data["is_magic_login_enabled"] = ENABLE_MAGIC_LINK_LOGIN == "1"
+        config_data["is_email_password_enabled"] = ENABLE_EMAIL_PASSWORD == "1"
 
         # Github app name
-        data["github_app_name"] = str(GITHUB_APP_NAME)
+        config_data["github_app_name"] = str(GITHUB_APP_NAME)
 
         # Slack client
-        data["slack_client_id"] = SLACK_CLIENT_ID
+        config_data["slack_client_id"] = SLACK_CLIENT_ID
 
         # Posthog
-        data["posthog_api_key"] = POSTHOG_API_KEY
-        data["posthog_host"] = POSTHOG_HOST
+        config_data["posthog_api_key"] = POSTHOG_API_KEY
+        config_data["posthog_host"] = POSTHOG_HOST
 
         # Unsplash
-        data["has_unsplash_configured"] = bool(UNSPLASH_ACCESS_KEY)
+        config_data["has_unsplash_configured"] = bool(UNSPLASH_ACCESS_KEY)
 
         # Open AI settings
-        data["has_llm_configured"] = bool(LLM_API_KEY)
+        config_data["has_llm_configured"] = bool(LLM_API_KEY)
 
         # File size settings
-        data["file_size_limit"] = float(os.environ.get("FILE_SIZE_LIMIT", 5242880))
+        config_data["file_size_limit"] = float(os.environ.get("FILE_SIZE_LIMIT", 5242880))
 
         # is smtp configured
-        data["is_smtp_configured"] = bool(EMAIL_HOST)
+        config_data["is_smtp_configured"] = bool(EMAIL_HOST)
 
         # Intercom settings
-        data["is_intercom_enabled"] = IS_INTERCOM_ENABLED == "1"
-        data["intercom_app_id"] = INTERCOM_APP_ID
+        config_data["is_intercom_enabled"] = IS_INTERCOM_ENABLED == "1"
+        config_data["intercom_app_id"] = INTERCOM_APP_ID
 
         # Base URL
-        data["admin_base_url"] = settings.ADMIN_BASE_URL
-        data["space_base_url"] = settings.SPACE_BASE_URL
-        data["app_base_url"] = settings.APP_BASE_URL
+        config_data["admin_base_url"] = settings.ADMIN_BASE_URL
+        config_data["space_base_url"] = settings.SPACE_BASE_URL
+        config_data["app_base_url"] = settings.APP_BASE_URL
 
-        data["instance_changelog_url"] = settings.INSTANCE_CHANGELOG_URL
-        data["is_self_managed"] = settings.IS_SELF_MANAGED
+        config_data["instance_changelog_url"] = settings.INSTANCE_CHANGELOG_URL
+        config_data["is_self_managed"] = settings.IS_SELF_MANAGED
 
+        if instance is None:
+            # Same envelope as a configured instance so admin/web clients can parse `instance` + `config`.
+            return Response(
+                {
+                    "config": config_data,
+                    "instance": {
+                        "is_activated": False,
+                        "is_setup_done": False,
+                        "workspaces_exist": False,
+                    },
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        serializer = InstanceSerializer(instance)
         instance_data = serializer.data
+        instance_data["is_activated"] = True
         instance_data["workspaces_exist"] = Workspace.objects.count() >= 1
 
-        response_data = {"config": data, "instance": instance_data}
+        response_data = {"config": config_data, "instance": instance_data}
         return Response(response_data, status=status.HTTP_200_OK)
 
     @invalidate_cache(path="/api/instances/", user=False)

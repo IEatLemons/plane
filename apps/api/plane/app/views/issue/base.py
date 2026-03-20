@@ -43,7 +43,7 @@ from plane.app.serializers import (
 from plane.bgtasks.issue_activities_task import issue_activity
 from plane.bgtasks.issue_description_version_task import issue_description_version_task
 from plane.bgtasks.recent_visited_task import recent_visited_task
-from plane.bgtasks.webhook_task import model_activity
+from plane.bgtasks.webhook_task import queue_model_activity
 from plane.db.models import (
     CycleIssue,
     FileAsset,
@@ -457,7 +457,7 @@ class IssueViewSet(BaseViewSet):
             datetime_fields = ["created_at", "updated_at"]
             issue = user_timezone_converter(issue, datetime_fields, request.user.user_timezone)
             # Send the model activity
-            model_activity.delay(
+            queue_model_activity(
                 model_name="issue",
                 model_id=str(serializer.data["id"]),
                 requested_data=request.data,
@@ -682,7 +682,7 @@ class IssueViewSet(BaseViewSet):
                     notification=True,
                     origin=base_host(request=request, is_app=True),
                 )
-                model_activity.delay(
+                queue_model_activity(
                     model_name="issue",
                     model_id=str(serializer.data.get("id", None)),
                     requested_data=request.data,

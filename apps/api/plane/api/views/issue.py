@@ -76,7 +76,7 @@ from plane.settings.storage import S3Storage
 from plane.bgtasks.storage_metadata_task import get_asset_object_metadata
 from .base import BaseAPIView
 from plane.utils.host import base_host
-from plane.bgtasks.webhook_task import model_activity
+from plane.bgtasks.webhook_task import queue_model_activity
 from plane.app.permissions import ROLE
 from plane.utils.openapi import (
     work_item_docs,
@@ -472,7 +472,7 @@ class IssueListCreateAPIEndpoint(BaseAPIView):
             )
 
             # Send the model activity
-            model_activity.delay(
+            queue_model_activity(
                 model_name="issue",
                 model_id=str(serializer.data["id"]),
                 requested_data=request.data,
@@ -1425,7 +1425,7 @@ class IssueCommentListCreateAPIEndpoint(BaseAPIView):
             )
 
             # Send the model activity
-            model_activity.delay(
+            queue_model_activity(
                 model_name="issue_comment",
                 model_id=str(serializer.instance.id),
                 requested_data=request.data,
@@ -1564,7 +1564,7 @@ class IssueCommentDetailAPIEndpoint(BaseAPIView):
                 epoch=int(timezone.now().timestamp()),
             )
             # Send the model activity
-            model_activity.delay(
+            queue_model_activity(
                 model_name="issue_comment",
                 model_id=str(pk),
                 requested_data=request.data,

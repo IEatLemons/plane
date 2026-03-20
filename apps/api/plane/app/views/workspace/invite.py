@@ -26,11 +26,10 @@ from plane.app.serializers import (
 )
 from plane.app.views.base import BaseAPIView
 from plane.bgtasks.event_tracking_task import track_event
-from plane.bgtasks.workspace_invitation_task import workspace_invitation
 from plane.db.models import User, Workspace, WorkspaceMember, WorkspaceMemberInvite
 from plane.utils.cache import invalidate_cache, invalidate_cache_directly
 from plane.utils.host import base_host
-from plane.utils.analytics_events import USER_JOINED_WORKSPACE, USER_INVITED_TO_WORKSPACE
+from plane.utils.analytics_events import USER_JOINED_WORKSPACE
 from .. import BaseViewSet
 
 
@@ -69,10 +68,24 @@ class WorkspaceInvitationsViewset(BaseViewSet):
         # Get the workspace object
         workspace = Workspace.objects.get(slug=slug)
 
+        # Normalize and validate all emails first
+        normalized_emails = []
+        for email in emails:
+            try:
+                validate_email(email.get("email"))
+                normalized_emails.append(email.get("email").strip().lower())
+            except ValidationError:
+                return Response(
+                    {
+                        "error": f"Invalid email - {email} provided a valid email address is required"  # noqa: E501
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
         # Check if user is already a member of workspace
         workspace_members = WorkspaceMember.objects.filter(
             workspace_id=workspace.id,
-            member__email__in=[email.get("email") for email in emails],
+            member__email__in=normalized_emails,
             is_active=True,
         ).select_related("member", "member__avatar_asset")
 
@@ -85,61 +98,85 @@ class WorkspaceInvitationsViewset(BaseViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        workspace_invitations = []
-        for email in emails:
-            try:
-                validate_email(email.get("email"))
-                workspace_invitations.append(
-                    WorkspaceMemberInvite(
-                        email=email.get("email").strip().lower(),
-                        workspace_id=workspace.id,
-                        token=jwt.encode(
-                            {"email": email, "timestamp": datetime.now().timestamp()},
-                            settings.SECRET_KEY,
-                            algorithm="HS256",
-                        ),
-                        role=email.get("role", 5),
-                        created_by=request.user,
-                    )
-                )
-            except ValidationError:
-                return Response(
-                    {
-                        "error": f"Invalid email - {email} provided a valid email address is required to send the invite"  # noqa: E501
-                    },
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-        # Create workspace member invite
-        workspace_invitations = WorkspaceMemberInvite.objects.bulk_create(
-            workspace_invitations, batch_size=10, ignore_conflicts=True
+        # Split into existing users (direct add as member) and non-existing (pending invite, no email sent)
+        email_to_role = {e.get("email").strip().lower(): int(e.get("role", 5)) for e in emails}
+        existing_users = list(
+            User.objects.filter(email__in=normalized_emails).values_list("email", flat=True)
         )
+        emails_to_invite = [e for e in normalized_emails if e not in existing_users]
 
-        current_site = base_host(request=request, is_app=True)
-
-        # Send invitations
-        for invitation in workspace_invitations:
-            workspace_invitation.delay(
-                invitation.email,
-                workspace.id,
-                invitation.token,
-                current_site,
-                request.user.email,
+        created_members = []
+        # Directly add existing users as workspace members (no email sent)
+        if existing_users:
+            members_to_create = [
+                WorkspaceMember(
+                    workspace_id=workspace.id,
+                    member=User.objects.get(email=email),
+                    role=email_to_role[email],
+                    created_by=request.user,
+                )
+                for email in existing_users
+            ]
+            created_members = WorkspaceMember.objects.bulk_create(
+                members_to_create, batch_size=10, ignore_conflicts=True
             )
-            track_event.delay(
-                user_id=request.user.id,
-                event_name=USER_INVITED_TO_WORKSPACE,
-                slug=slug,
-                event_properties={
-                    "user_id": request.user.id,
-                    "workspace_id": workspace.id,
-                    "workspace_slug": workspace.slug,
-                    "invitee_role": invitation.role,
-                    "invited_at": str(timezone.now()),
-                    "invitee_email": invitation.email,
-                },
+            # Prefetch for serialization
+            created_members = WorkspaceMember.objects.filter(
+                pk__in=[m.pk for m in created_members]
+            ).select_related("member", "member__avatar_asset")
+            for wm in created_members:
+                track_event.delay(
+                    user_id=wm.member_id,
+                    event_name=USER_JOINED_WORKSPACE,
+                    slug=slug,
+                    event_properties={
+                        "user_id": str(wm.member_id),
+                        "workspace_id": str(workspace.id),
+                        "workspace_slug": workspace.slug,
+                        "role": wm.role,
+                        "joined_at": str(timezone.now()),
+                    },
+                )
+            invalidate_cache_directly(
+                path=f"/api/workspaces/{slug}/members/",
+                user=False,
+                request=request,
+                multiple=True,
             )
 
-        return Response({"message": "Emails sent successfully"}, status=status.HTTP_200_OK)
+        # Create pending invites for non-existing users (no email sent)
+        workspace_invitations = []
+        for email in emails_to_invite:
+            workspace_invitations.append(
+                WorkspaceMemberInvite(
+                    email=email,
+                    workspace_id=workspace.id,
+                    token=jwt.encode(
+                        {"email": email, "timestamp": datetime.now().timestamp()},
+                        settings.SECRET_KEY,
+                        algorithm="HS256",
+                    ),
+                    role=email_to_role[email],
+                    created_by=request.user,
+                )
+            )
+        if workspace_invitations:
+            workspace_invitations = WorkspaceMemberInvite.objects.bulk_create(
+                workspace_invitations, batch_size=10, ignore_conflicts=True
+            )
+
+        # Return both directly added members and pending invitations
+        members_data = WorkSpaceMemberSerializer(
+            created_members, many=True, fields=("id", "member", "role")
+        ).data if created_members else []
+        invitations_data = WorkSpaceMemberInviteSerializer(
+            workspace_invitations, many=True
+        ).data if workspace_invitations else []
+
+        return Response(
+            {"members": members_data, "invitations": invitations_data},
+            status=status.HTTP_201_CREATED,
+        )
 
     def destroy(self, request, slug, pk):
         workspace_member_invite = WorkspaceMemberInvite.objects.get(pk=pk, workspace__slug=slug)

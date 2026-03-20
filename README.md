@@ -67,7 +67,7 @@ Getting started with Plane is simple. Choose the setup that works best for you:
 
 ## 🛠️ Local development
 
-See [CONTRIBUTING](./CONTRIBUTING.md)
+See [CONTRIBUTING](./CONTRIBUTING.md). For a concise local testing guide (Docker setup, first-time access, troubleshooting), see [docs/local-development.md](./docs/local-development.md).
 
 ## ⚙️ Built with
 

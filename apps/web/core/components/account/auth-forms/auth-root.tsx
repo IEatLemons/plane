@@ -48,6 +48,11 @@ export const AuthRoot = observer(function AuthRoot(props: TAuthRoot) {
   const [errorInfo, setErrorInfo] = useState<TAuthErrorInfo | undefined>(undefined);
   // store hooks
   const { config } = useInstance();
+
+  const emailFromQuery = searchParams.get("email");
+  useEffect(() => {
+    if (emailFromQuery) setEmail(emailFromQuery.toString());
+  }, [emailFromQuery]);
   // derived values
   const oAuthActionText = authMode === EAuthModes.SIGN_UP ? "Sign up" : "Sign in";
   const { isOAuthEnabled, oAuthOptions } = useOAuthConfig(oAuthActionText);
@@ -137,10 +142,10 @@ export const AuthRoot = observer(function AuthRoot(props: TAuthRoot) {
           authStep={authStep}
           authMode={authMode}
           email={email}
-          setEmail={(email) => setEmail(email)}
-          setAuthMode={(authMode) => setAuthMode(authMode)}
-          setAuthStep={(authStep) => setAuthStep(authStep)}
-          setErrorInfo={(errorInfo) => setErrorInfo(errorInfo)}
+          setEmail={setEmail}
+          setAuthMode={setAuthMode}
+          setAuthStep={setAuthStep}
+          setErrorInfo={setErrorInfo}
           currentAuthMode={currentAuthMode}
         />
       )}

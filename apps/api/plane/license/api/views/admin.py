@@ -13,7 +13,6 @@ from django.views import View
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from django.utils import timezone
-from django.contrib.auth.hashers import make_password
 from django.contrib.auth import logout
 
 # Third party imports
@@ -29,6 +28,7 @@ from plane.license.api.serializers import (
     InstanceAdminSerializer,
 )
 from plane.license.models import Instance, InstanceAdmin
+from plane.license.utils.instance_bootstrap import get_or_bootstrap_community_instance
 from plane.db.models import User, Profile
 from plane.utils.cache import cache_response, invalidate_cache
 from plane.authentication.utils.login import user_login
@@ -91,18 +91,10 @@ class InstanceAdminSignUpEndpoint(View):
 
     @invalidate_cache(path="/api/instances/", user=False)
     def post(self, request):
-        # Check instance first
-        instance = Instance.objects.first()
-        if instance is None:
-            exc = AuthenticationException(
-                error_code=AUTHENTICATION_ERROR_CODES["INSTANCE_NOT_CONFIGURED"],
-                error_message="INSTANCE_NOT_CONFIGURED",
-            )
-            url = urljoin(
-                base_host(request=request, is_admin=True),
-                "?" + urlencode(exc.get_error_dict()),
-            )
-            return HttpResponseRedirect(url)
+        # Deployments usually run register_instance first; local dev often skips it.
+        # Without a row, GET /api/instances/ shows the pre-setup stub but sign-up would
+        # endlessly redirect INSTANCE_NOT_CONFIGURED — bootstrap here on first admin signup.
+        instance = get_or_bootstrap_community_instance()
 
         # check if the instance has already an admin registered
         if InstanceAdmin.objects.first():
@@ -207,14 +199,15 @@ class InstanceAdminSignUpEndpoint(View):
                 )
                 return HttpResponseRedirect(url)
 
-            user = User.objects.create(
+            user = User(
                 first_name=first_name,
                 last_name=last_name,
                 email=email,
                 username=uuid.uuid4().hex,
-                password=make_password(password),
                 is_password_autoset=False,
             )
+            user.set_password(password)
+            user.save()
             _ = Profile.objects.create(user=user, company_name=company_name)
             # settings last active for the user
             user.is_active = True

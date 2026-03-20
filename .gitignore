@@ -50,6 +50,7 @@ pnpm-debug.log*
 ## Django ##
 venv
 .venv
+.venvp
 *.pyc
 staticfiles
 mediafiles

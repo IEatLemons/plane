@@ -48,7 +48,7 @@ from plane.db.models import (
 from plane.utils.cycle_transfer_issues import transfer_cycle_issues
 from plane.utils.host import base_host
 from .base import BaseAPIView
-from plane.bgtasks.webhook_task import model_activity
+from plane.bgtasks.webhook_task import queue_model_activity
 from plane.utils.openapi.decorators import cycle_docs
 from plane.utils.openapi import (
     CURSOR_PARAMETER,
@@ -332,7 +332,7 @@ class CycleListCreateAPIEndpoint(BaseAPIView):
                     )
                 serializer.save(project_id=project_id)
                 # Send the model activity
-                model_activity.delay(
+                queue_model_activity(
                     model_name="cycle",
                     model_id=str(serializer.instance.id),
                     requested_data=request.data,
@@ -538,7 +538,7 @@ class CycleDetailAPIEndpoint(BaseAPIView):
             serializer.save()
 
             # Send the model activity
-            model_activity.delay(
+            queue_model_activity(
                 model_name="cycle",
                 model_id=str(serializer.instance.id),
                 requested_data=request.data,

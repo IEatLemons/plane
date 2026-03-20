@@ -1468,7 +1468,7 @@ export default {
         title: "Members",
         add_member: "Add member",
         pending_invites: "Pending invites",
-        invitations_sent_successfully: "Invitations sent successfully",
+        invitations_sent_successfully: "Members added successfully",
         leave_confirmation:
           "Are you sure you want to leave the workspace? You will no longer have access to this workspace. This action cannot be undone.",
         details: {
@@ -1480,13 +1480,14 @@ export default {
           joining_date: "Joining date",
         },
         modal: {
-          title: "Invite people to collaborate",
-          description: "Invite people to collaborate on your workspace.",
-          button: "Send invitations",
-          button_loading: "Sending invitations",
+          title: "Add members",
+          description:
+            "Enter member emails to add them directly to the workspace—no email is sent. Existing users join immediately; others appear as pending invitations.",
+          button: "Add members",
+          button_loading: "Adding",
           placeholder: "name@company.com",
           errors: {
-            required: "We need an email address to invite them.",
+            required: "Please enter a member email.",
             invalid: "Email is invalid",
           },
         },

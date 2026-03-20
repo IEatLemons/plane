@@ -1633,7 +1633,7 @@ export default {
         title: "Mitglieder",
         add_member: "Mitglied hinzufügen",
         pending_invites: "Ausstehende Einladungen",
-        invitations_sent_successfully: "Einladungen erfolgreich versendet",
+        invitations_sent_successfully: "Mitglieder hinzugefügt",
         leave_confirmation:
           "Möchten Sie diesen Arbeitsbereich wirklich verlassen? Sie verlieren den Zugriff. Diese Aktion ist nicht umkehrbar.",
         details: {
@@ -1645,13 +1645,14 @@ export default {
           joining_date: "Beitrittsdatum",
         },
         modal: {
-          title: "Mitarbeiter einladen",
-          description: "Laden Sie Personen zur Zusammenarbeit ein.",
-          button: "Einladungen senden",
-          button_loading: "Einladungen werden gesendet",
+          title: "Mitglieder hinzufügen",
+          description:
+            "E-Mail-Adressen eingeben, um Mitglieder direkt zum Arbeitsbereich hinzuzufügen—es wird keine E-Mail gesendet. Bestehende Nutzer werden sofort hinzugefügt; andere erscheinen als ausstehende Einladungen.",
+          button: "Mitglieder hinzufügen",
+          button_loading: "Wird hinzugefügt",
           placeholder: "name@unternehmen.de",
           errors: {
-            required: "Eine E-Mail-Adresse ist erforderlich.",
+            required: "Bitte geben Sie eine E-Mail-Adresse ein.",
             invalid: "E-Mail ist ungültig",
           },
         },

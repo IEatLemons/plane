@@ -22,7 +22,7 @@ from plane.app.permissions import allow_permission, ROLE
 from plane.db.models import IssueComment, ProjectMember, CommentReaction, Project, Issue
 from plane.bgtasks.issue_activities_task import issue_activity
 from plane.utils.host import base_host
-from plane.bgtasks.webhook_task import model_activity
+from plane.bgtasks.webhook_task import queue_model_activity
 
 
 class IssueCommentViewSet(BaseViewSet):
@@ -94,7 +94,7 @@ class IssueCommentViewSet(BaseViewSet):
                 origin=base_host(request=request, is_app=True),
             )
             # Send the model activity
-            model_activity.delay(
+            queue_model_activity(
                 model_name="issue_comment",
                 model_id=str(serializer.data["id"]),
                 requested_data=request.data,
@@ -129,7 +129,7 @@ class IssueCommentViewSet(BaseViewSet):
                 origin=base_host(request=request, is_app=True),
             )
             # Send the model activity
-            model_activity.delay(
+            queue_model_activity(
                 model_name="issue_comment",
                 model_id=str(pk),
                 requested_data=request.data,

@@ -40,7 +40,7 @@ from plane.db.models import (
 )
 
 from .base import BaseAPIView
-from plane.bgtasks.webhook_task import model_activity
+from plane.bgtasks.webhook_task import queue_model_activity
 from plane.utils.host import base_host
 from plane.utils.openapi import (
     module_docs,
@@ -226,7 +226,7 @@ class ModuleListCreateAPIEndpoint(BaseAPIView):
                 )
             serializer.save()
             # Send the model activity
-            model_activity.delay(
+            queue_model_activity(
                 model_name="module",
                 model_id=str(serializer.instance.id),
                 requested_data=request.data,
@@ -436,7 +436,7 @@ class ModuleDetailAPIEndpoint(BaseAPIView):
             serializer.save()
 
             # Send the model activity
-            model_activity.delay(
+            queue_model_activity(
                 model_name="module",
                 model_id=str(serializer.instance.id),
                 requested_data=request.data,

@@ -57,7 +57,7 @@ from plane.bgtasks.recent_visited_task import recent_visited_task
 from plane.utils.host import base_host
 from plane.utils.cycle_transfer_issues import transfer_cycle_issues
 from .. import BaseAPIView, BaseViewSet
-from plane.bgtasks.webhook_task import model_activity
+from plane.bgtasks.webhook_task import queue_model_activity
 from plane.utils.timezone_converter import convert_to_utc, user_timezone_converter
 
 
@@ -315,7 +315,7 @@ class CycleViewSet(BaseViewSet):
                 cycle = user_timezone_converter(cycle, datetime_fields, project_timezone)
 
                 # Send the model activity
-                model_activity.delay(
+                queue_model_activity(
                     model_name="cycle",
                     model_id=str(cycle["id"]),
                     requested_data=request.data,
@@ -394,7 +394,7 @@ class CycleViewSet(BaseViewSet):
             cycle = user_timezone_converter(cycle, datetime_fields, project_timezone)
 
             # Send the model activity
-            model_activity.delay(
+            queue_model_activity(
                 model_name="cycle",
                 model_id=str(cycle["id"]),
                 requested_data=request.data,

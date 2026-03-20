@@ -282,10 +282,9 @@ export class WorkspaceMemberStore implements IWorkspaceMemberStore {
   removeMemberFromWorkspace = async (workspaceSlug: string, userId: string) => {
     const memberDetails = this.getWorkspaceMemberDetails(userId);
     if (!memberDetails) throw new Error("Member not found");
-    await this.workspaceService.deleteWorkspaceMember(workspaceSlug, memberDetails?.id).then(() => {
-      runInAction(() => {
-        set(this.workspaceMemberMap, [workspaceSlug, userId, "is_active"], false);
-      });
+    await this.workspaceService.deleteWorkspaceMember(workspaceSlug, memberDetails.id);
+    runInAction(() => {
+      set(this.workspaceMemberMap, [workspaceSlug, userId, "is_active"], false);
     });
   };
 
@@ -308,7 +307,8 @@ export class WorkspaceMemberStore implements IWorkspaceMemberStore {
    */
   inviteMembersToWorkspace = async (workspaceSlug: string, data: IWorkspaceBulkInviteFormData) => {
     const response = await this.workspaceService.inviteWorkspace(workspaceSlug, data);
-    await this.fetchWorkspaceMemberInvitations(workspaceSlug);
+    // Refresh both members (directly added) and pending invitations
+    await Promise.all([this.fetchWorkspaceMembers(workspaceSlug), this.fetchWorkspaceMemberInvitations(workspaceSlug)]);
     return response;
   };
 
@@ -323,7 +323,7 @@ export class WorkspaceMemberStore implements IWorkspaceMemberStore {
     invitationId: string,
     data: Partial<IWorkspaceMemberInvitation>
   ) => {
-    const originalMemberInvitations = [...this.workspaceMemberInvitations?.[workspaceSlug]]; // in case of error, we will revert back to original members
+    const originalMemberInvitations = [...(this.workspaceMemberInvitations[workspaceSlug] ?? [])]; // in case of error, we will revert back to original members
     try {
       const memberInvitations = originalMemberInvitations?.map((invitation) => ({
         ...invitation,
@@ -348,14 +348,14 @@ export class WorkspaceMemberStore implements IWorkspaceMemberStore {
    * @param workspaceSlug
    * @param memberId
    */
-  deleteMemberInvitation = async (workspaceSlug: string, invitationId: string) =>
-    await this.workspaceService.deleteWorkspaceInvitations(workspaceSlug.toString(), invitationId).then(() => {
-      runInAction(() => {
-        this.workspaceMemberInvitations[workspaceSlug] = this.workspaceMemberInvitations[workspaceSlug].filter(
-          (inv) => inv.id !== invitationId
-        );
-      });
+  deleteMemberInvitation = async (workspaceSlug: string, invitationId: string) => {
+    await this.workspaceService.deleteWorkspaceInvitations(workspaceSlug.toString(), invitationId);
+    runInAction(() => {
+      this.workspaceMemberInvitations[workspaceSlug] = this.workspaceMemberInvitations[workspaceSlug].filter(
+        (inv) => inv.id !== invitationId
+      );
     });
+  };
 
   isUserSuspended = computedFn((userId: string, workspaceSlug: string) => {
     if (!workspaceSlug) return false;

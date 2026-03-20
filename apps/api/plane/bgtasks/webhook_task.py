@@ -460,6 +460,14 @@ def webhook_activity(
         return
 
 
+def queue_model_activity(**kwargs):
+    """Enqueue model activity / webhook fan-out; skip quietly if Celery broker is unavailable."""
+    try:
+        model_activity.delay(**kwargs)
+    except Exception as exc:
+        logger.warning("model_activity not queued (broker may be unavailable): %s", exc)
+
+
 @shared_task
 def model_activity(model_name, model_id, requested_data, current_instance, actor_id, slug, origin=None):
     """Function takes in two json and computes differences between keys of both the json"""

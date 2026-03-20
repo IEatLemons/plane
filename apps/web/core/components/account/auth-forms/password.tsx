@@ -6,11 +6,12 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { observer } from "mobx-react";
+import { flushSync } from "react-dom";
 import Link from "next/link";
 // icons
 import { Eye, EyeOff, Info, XCircle } from "lucide-react";
 // plane imports
-import { API_BASE_URL, E_PASSWORD_STRENGTH, AUTH_TRACKER_EVENTS, AUTH_TRACKER_ELEMENTS } from "@plane/constants";
+import { API_BASE_URL, E_PASSWORD_STRENGTH, AUTH_TRACKER_ELEMENTS } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
 import { Button } from "@plane/propel/button";
 import { CloseIcon } from "@plane/propel/icons";
@@ -77,6 +78,11 @@ export const AuthPasswordForm = observer(function AuthPasswordForm(props: Props)
     }
   }, [csrfPromise]);
 
+  // Keep posted `email` in sync when parent updates it (e.g. query params after redirect).
+  useEffect(() => {
+    setPasswordFormData((prev) => ({ ...prev, email }));
+  }, [email]);
+
   const redirectToUniqueCodeSignIn = async () => {
     handleAuthStep(EAuthSteps.UNIQUE_CODE);
   };
@@ -105,11 +111,9 @@ export const AuthPasswordForm = observer(function AuthPasswordForm(props: Props)
 
   const isButtonDisabled = useMemo(
     () =>
-      !isSubmitting &&
-      !!passwordFormData.password &&
-      (mode === EAuthModes.SIGN_UP ? passwordFormData.password === passwordFormData.confirm_password : true)
-        ? false
-        : true,
+      isSubmitting ||
+      !passwordFormData.password ||
+      (mode === EAuthModes.SIGN_UP && passwordFormData.password !== passwordFormData.confirm_password),
     [isSubmitting, mode, passwordFormData.confirm_password, passwordFormData.password]
   );
 
@@ -152,16 +156,37 @@ export const AuthPasswordForm = observer(function AuthPasswordForm(props: Props)
         onSubmit={async (event) => {
           event.preventDefault(); // Prevent form from submitting by default
           await handleCSRFToken();
+          // Read from DOM: browser autofill often does not fire React onChange on controlled inputs,
+          // so state can be empty while the field shows a value — native submit would POST wrong password.
+          const passwordEl = formRef.current?.querySelector<HTMLInputElement>('input[name="password"]');
+          const rawPassword = passwordEl?.value ?? passwordFormData.password;
+          const confirmEl = formRef.current?.querySelector<HTMLInputElement>('input[name="confirm_password"]');
+          const rawConfirm = confirmEl?.value ?? passwordFormData.confirm_password ?? "";
+
           const isPasswordValid =
             mode === EAuthModes.SIGN_UP
-              ? getPasswordStrength(passwordFormData.password) === E_PASSWORD_STRENGTH.STRENGTH_VALID
-              : true;
-          if (isPasswordValid) {
-            setIsSubmitting(true);
-            if (formRef.current) formRef.current.submit(); // Manually submit the form if the condition is met
-          } else {
-            setBannerMessage(true);
+              ? getPasswordStrength(rawPassword) === E_PASSWORD_STRENGTH.STRENGTH_VALID
+              : rawPassword.length > 0;
+
+          if (!isPasswordValid) {
+            if (mode === EAuthModes.SIGN_UP) setBannerMessage(true);
+            return;
           }
+
+          if (mode === EAuthModes.SIGN_UP && rawPassword !== rawConfirm) {
+            return;
+          }
+
+          flushSync(() => {
+            setPasswordFormData((prev) => ({
+              ...prev,
+              password: rawPassword,
+              ...(mode === EAuthModes.SIGN_UP ? { confirm_password: rawConfirm } : {}),
+            }));
+          });
+
+          setIsSubmitting(true);
+          if (formRef.current) formRef.current.submit();
         }}
         onError={() => {
           setIsSubmitting(false);
@@ -177,7 +202,6 @@ export const AuthPasswordForm = observer(function AuthPasswordForm(props: Props)
           <div className={`relative flex items-center rounded-md border border-strong bg-surface-1`}>
             <Input
               id="email"
-              name="email"
               type="email"
               value={passwordFormData.email}
               onChange={(e) => handleFormChange("email", e.target.value)}
@@ -209,12 +233,12 @@ export const AuthPasswordForm = observer(function AuthPasswordForm(props: Props)
               name="password"
               value={passwordFormData.password}
               onChange={(e) => handleFormChange("password", e.target.value)}
+              onInput={(e) => handleFormChange("password", (e.target as HTMLInputElement).value)}
               placeholder={t("auth.common.password.placeholder")}
               className="h-10 w-full border border-strong !bg-surface-1 pr-12 disable-autofill-style placeholder:text-placeholder"
               onFocus={() => setIsPasswordInputFocused(true)}
               onBlur={() => setIsPasswordInputFocused(false)}
-              autoComplete="off"
-              autoFocus
+              autoComplete={mode === EAuthModes.SIGN_IN ? "current-password" : "new-password"}
             />
             <button
               type="button"
@@ -246,11 +270,12 @@ export const AuthPasswordForm = observer(function AuthPasswordForm(props: Props)
                 name="confirm_password"
                 value={passwordFormData.confirm_password}
                 onChange={(e) => handleFormChange("confirm_password", e.target.value)}
+                onInput={(e) => handleFormChange("confirm_password", (e.target as HTMLInputElement).value)}
                 placeholder={t("auth.common.password.confirm_password.placeholder")}
                 className="h-10 w-full border border-strong !bg-surface-1 pr-12 disable-autofill-style placeholder:text-placeholder"
                 onFocus={() => setIsRetryPasswordInputFocused(true)}
                 onBlur={() => setIsRetryPasswordInputFocused(false)}
-                autoComplete="off"
+                autoComplete="new-password"
               />
               <button
                 type="button"

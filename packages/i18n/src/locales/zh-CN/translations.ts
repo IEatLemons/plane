@@ -1597,7 +1597,7 @@ export default {
         title: "成员",
         add_member: "添加成员",
         pending_invites: "待处理邀请",
-        invitations_sent_successfully: "邀请发送成功",
+        invitations_sent_successfully: "成员已添加",
         leave_confirmation: "您确定要离开工作区吗？您将无法再访问此工作区。此操作无法撤消。",
         details: {
           full_name: "全名",
@@ -1608,13 +1608,14 @@ export default {
           joining_date: "加入日期",
         },
         modal: {
-          title: "邀请人员协作",
-          description: "邀请人员在您的工作区中协作。",
-          button: "发送邀请",
-          button_loading: "正在发送邀请",
+          title: "添加成员",
+          description:
+            "输入成员邮箱直接添加至工作区，无需发送邮件。已注册用户将立即加入，未注册用户将显示为待处理邀请。",
+          button: "添加成员",
+          button_loading: "正在添加",
           placeholder: "name@company.com",
           errors: {
-            required: "我们需要一个电子邮件地址来邀请他们。",
+            required: "请输入成员邮箱。",
             invalid: "电子邮件无效",
           },
         },

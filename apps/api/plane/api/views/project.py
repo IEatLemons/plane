@@ -37,7 +37,7 @@ from plane.db.models import (
     IntakeIssue,
     ProjectPage,
 )
-from plane.bgtasks.webhook_task import model_activity, webhook_activity
+from plane.bgtasks.webhook_task import queue_model_activity, webhook_activity
 from .base import BaseAPIView
 from plane.utils.host import base_host
 from plane.api.serializers import (
@@ -256,7 +256,7 @@ class ProjectListCreateAPIEndpoint(BaseAPIView):
                 project = self.get_queryset().filter(pk=serializer.instance.id).first()
 
                 # Model activity
-                model_activity.delay(
+                queue_model_activity(
                     model_name="project",
                     model_id=str(project.id),
                     requested_data=request.data,
@@ -439,7 +439,7 @@ class ProjectDetailAPIEndpoint(BaseAPIView):
 
                 project = self.get_queryset().filter(pk=serializer.instance.id).first()
 
-                model_activity.delay(
+                queue_model_activity(
                     model_name="project",
                     model_id=str(project.id),
                     requested_data=request.data,

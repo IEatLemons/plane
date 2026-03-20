@@ -81,6 +81,8 @@ pnpm dev
 
 That’s it! You’re all set to begin coding. Remember to refresh your browser if changes don’t auto-reload. Happy contributing! 🎉
 
+For a more detailed local testing guide (Docker-only flow, migrator, first-time admin registration, troubleshooting), see [docs/local-development.md](./docs/local-development.md).
+
 ## Missing a Feature?
 
 If a feature is missing, you can directly _request_ a new one [here](https://github.com/makeplane/plane/issues/new?assignees=&labels=feature&template=feature_request.yml&title=%F0%9F%9A%80+Feature%3A+). You also can do the same by choosing "🚀 Feature" when raising a [New Issue](https://github.com/makeplane/plane/issues/new/choose) on our GitHub Repository.

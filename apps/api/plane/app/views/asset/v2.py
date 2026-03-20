@@ -22,7 +22,7 @@ from plane.db.models import FileAsset, Workspace, Project, User
 from plane.settings.storage import S3Storage
 from plane.app.permissions import allow_permission, ROLE
 from plane.utils.cache import invalidate_cache_directly
-from plane.bgtasks.storage_metadata_task import get_asset_object_metadata
+from plane.bgtasks.storage_metadata_task import queue_get_asset_object_metadata
 from plane.throttles.asset import AssetRateThrottle
 
 
@@ -174,7 +174,7 @@ class UserAssetsV2Endpoint(BaseAPIView):
         asset.is_uploaded = True
         # get the storage metadata
         if not asset.storage_metadata:
-            get_asset_object_metadata.delay(asset_id=str(asset_id))
+            queue_get_asset_object_metadata(str(asset_id))
         # get the entity and save the asset id for the request field
         self.entity_asset_save(
             asset_id=asset_id,
@@ -383,7 +383,7 @@ class WorkspaceFileAssetEndpoint(BaseAPIView):
         asset.is_uploaded = True
         # get the storage metadata
         if not asset.storage_metadata:
-            get_asset_object_metadata.delay(asset_id=str(asset_id))
+            queue_get_asset_object_metadata(str(asset_id))
         # get the entity and save the asset id for the request field
         self.entity_asset_save(
             asset_id=asset_id,
@@ -584,7 +584,7 @@ class ProjectAssetEndpoint(BaseAPIView):
         asset.is_uploaded = True
         # get the storage metadata
         if not asset.storage_metadata:
-            get_asset_object_metadata.delay(asset_id=str(pk))
+            queue_get_asset_object_metadata(str(pk))
 
         # update the attributes
         asset.attributes = request.data.get("attributes", asset.attributes)

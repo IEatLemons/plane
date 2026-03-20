@@ -209,7 +209,7 @@ const InviteMemberInput = observer(function InviteMemberInput(props: InviteMembe
                     style={styles.popper}
                     {...attributes.popper}
                   >
-                    {Object.entries(ROLE_DETAILS).map(([key, value]) => (
+                    {Object.entries(ROLE_DETAILS).map(([key, roleDetail]) => (
                       <Listbox.Option
                         as="div"
                         key={key}
@@ -223,8 +223,8 @@ const InviteMemberInput = observer(function InviteMemberInput(props: InviteMembe
                         {({ selected }) => (
                           <div className="flex items-center gap-2 p-1 text-wrap">
                             <div className="flex flex-col">
-                              <div className="text-13 font-medium">{t(value.i18n_title)}</div>
-                              <div className="flex text-11 text-tertiary">{t(value.i18n_description)}</div>
+                              <div className="text-13 font-medium">{t(roleDetail.i18n_title)}</div>
+                              <div className="flex text-11 text-tertiary">{t(roleDetail.i18n_description)}</div>
                             </div>
                             {selected && <CheckIcon className="h-4 w-4 shrink-0" />}
                           </div>
@@ -301,9 +301,9 @@ export const InviteTeamStep = observer(function InviteTeamStep(props: Props) {
         setToast({
           type: TOAST_TYPE.SUCCESS,
           title: "Success!",
-          message: "Invitations sent successfully.",
+          message: "Members added successfully.",
         });
-        await nextStep();
+        return nextStep();
       })
       .catch((err) => {
         setToast({

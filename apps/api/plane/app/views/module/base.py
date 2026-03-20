@@ -62,7 +62,7 @@ from plane.db.models import (
 )
 from plane.utils.analytics_plot import burndown_plot
 from plane.utils.timezone_converter import user_timezone_converter
-from plane.bgtasks.webhook_task import model_activity
+from plane.bgtasks.webhook_task import queue_model_activity
 from .. import BaseAPIView, BaseViewSet
 from plane.bgtasks.recent_visited_task import recent_visited_task
 from plane.utils.host import base_host
@@ -336,7 +336,7 @@ class ModuleViewSet(BaseViewSet):
                 )
             ).first()
             # Send the model activity
-            model_activity.delay(
+            queue_model_activity(
                 model_name="module",
                 model_id=str(module["id"]),
                 requested_data=request.data,
@@ -705,7 +705,7 @@ class ModuleViewSet(BaseViewSet):
             ).first()
 
             # Send the model activity
-            model_activity.delay(
+            queue_model_activity(
                 model_name="module",
                 model_id=str(module["id"]),
                 requested_data=request.data,

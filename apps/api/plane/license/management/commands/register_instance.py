@@ -86,7 +86,16 @@ class Command(BaseCommand):
             instance.edition = InstanceEdition.PLANE_COMMUNITY.value
             instance.save()
 
-        # Call the instance traces task
-        instance_traces.delay()
+        # Optional telemetry task — requires a working Celery broker (e.g. RabbitMQ vhost).
+        try:
+            instance_traces.delay()
+        except Exception as exc:
+            self.stdout.write(
+                self.style.WARNING(
+                    "Instance traces task was not queued (broker unreachable or misconfigured: %s). "
+                    "Instance registration still succeeded."
+                    % (exc,)
+                )
+            )
 
         return
