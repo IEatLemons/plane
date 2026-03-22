@@ -14,6 +14,15 @@ DEBUG = int(os.environ.get("DEBUG", 0)) == 1
 # Honor the 'X-Forwarded-Proto' header for request.is_secure()
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
+# Cross-origin credentialed API access (e.g. local `pnpm dev` on http://localhost:3000
+# calling this API on HTTPS). Default SameSite=Lax does not attach session/CSRF
+# cookies to cross-site fetch/XHR; None requires Secure (satisfied on Railway HTTPS).
+# Mirrors plane.settings.local for split UI/API origins.
+SESSION_COOKIE_SAMESITE = "None"
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SAMESITE = "None"
+CSRF_COOKIE_SECURE = True
+
 INSTALLED_APPS += ("scout_apm.django",)  # noqa
 
 
