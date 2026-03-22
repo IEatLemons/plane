@@ -396,6 +396,7 @@ export default {
   keyboard_shortcuts: "키보드 단축키",
   whats_new: "새로운 기능",
   version: "버전",
+  source_repository: "Source repository",
   we_are_having_trouble_fetching_the_updates: "업데이트를 가져오는 데 문제가 발생했습니다.",
   our_changelogs: "우리의 변경 로그",
   for_the_latest_updates: "최신 업데이트를 위해",
@@ -625,6 +626,7 @@ export default {
     manage_widgets: "위젯 관리",
     title: "홈",
     star_us_on_github: "GitHub에서 별표",
+    this_fork_on_github: "This fork on GitHub",
   },
   link: {
     modal: {

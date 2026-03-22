@@ -406,6 +406,7 @@ export default {
   keyboard_shortcuts: "Scorciatoie da tastiera",
   whats_new: "Novità?",
   version: "Versione",
+  source_repository: "Source repository",
   we_are_having_trouble_fetching_the_updates: "Stiamo riscontrando problemi nel recuperare gli aggiornamenti.",
   our_changelogs: "i nostri changelog",
   for_the_latest_updates: "per gli ultimi aggiornamenti.",
@@ -638,6 +639,7 @@ export default {
     manage_widgets: "Gestisci widget",
     title: "Home",
     star_us_on_github: "Metti una stella su GitHub",
+    this_fork_on_github: "This fork on GitHub",
   },
   link: {
     modal: {

@@ -390,6 +390,7 @@ export default {
   keyboard_shortcuts: "鍵盤快速鍵",
   whats_new: "新功能",
   version: "版本",
+  source_repository: "Source repository",
   we_are_having_trouble_fetching_the_updates: "我們在取得更新時遇到問題。",
   our_changelogs: "我們的更新日誌",
   for_the_latest_updates: "以取得最新更新。",
@@ -619,6 +620,7 @@ export default {
     manage_widgets: "管理小工具",
     title: "首頁",
     star_us_on_github: "在 GitHub 上給我們星星",
+    this_fork_on_github: "This fork on GitHub",
   },
   link: {
     modal: {

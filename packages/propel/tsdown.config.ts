@@ -42,11 +42,23 @@ export default defineConfig({
   dts: true,
   copy: ["src/styles"],
   exports: {
-    customExports: (exports) => ({
-      ...exports,
-      "./styles/react-day-picker.css": "./dist/styles/react-day-picker.css",
-      "./styles/react-day-picker": "./dist/styles/react-day-picker.css",
-    }),
+    customExports: (exports) => {
+      const withStyles = {
+        ...exports,
+        "./styles/react-day-picker.css": "./dist/styles/react-day-picker.css",
+        "./styles/react-day-picker": "./dist/styles/react-day-picker.css",
+      };
+      const out: Record<string, unknown> = {};
+      for (const [key, val] of Object.entries(withStyles)) {
+        if (typeof val === "string" && val.endsWith(".js")) {
+          const types = val.replace("/index.js", "/index.d.ts");
+          out[key] = { types, import: val, default: val };
+        } else {
+          out[key] = val;
+        }
+      }
+      return out;
+    },
   },
   platform: "neutral",
 });

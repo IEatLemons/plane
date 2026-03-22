@@ -401,6 +401,7 @@ export default {
   keyboard_shortcuts: "キーボードショートカット",
   whats_new: "新機能",
   version: "バージョン",
+  source_repository: "Source repository",
   we_are_having_trouble_fetching_the_updates: "更新情報の取得に問題が発生しています。",
   our_changelogs: "変更履歴",
   for_the_latest_updates: "最新の更新情報については",
@@ -631,6 +632,7 @@ export default {
     manage_widgets: "ウィジェットを管理",
     title: "ホーム",
     star_us_on_github: "GitHubでスターをつける",
+    this_fork_on_github: "This fork on GitHub",
   },
   link: {
     modal: {

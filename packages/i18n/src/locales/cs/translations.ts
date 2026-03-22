@@ -401,6 +401,7 @@ export default {
   keyboard_shortcuts: "Klávesové zkratky",
   whats_new: "Co je nového?",
   version: "Verze",
+  source_repository: "Source repository",
   we_are_having_trouble_fetching_the_updates: "Máme potíže s načítáním aktualizací.",
   our_changelogs: "naše změnové protokoly",
   for_the_latest_updates: "pro nejnovější aktualizace.",
@@ -630,6 +631,7 @@ export default {
     manage_widgets: "Spravovat widgety",
     title: "Domů",
     star_us_on_github: "Ohodnoťte nás na GitHubu",
+    this_fork_on_github: "This fork on GitHub",
   },
   link: {
     modal: {

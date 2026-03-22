@@ -235,6 +235,7 @@ export default {
   keyboard_shortcuts: "Keyboard shortcuts",
   whats_new: "What's new?",
   version: "Version",
+  source_repository: "Source repository",
   we_are_having_trouble_fetching_the_updates: "We are having trouble fetching the updates.",
   our_changelogs: "our changelogs",
   for_the_latest_updates: "for the latest updates.",
@@ -468,6 +469,7 @@ export default {
     manage_widgets: "Manage widgets",
     title: "Home",
     star_us_on_github: "Star us on GitHub",
+    this_fork_on_github: "This fork on GitHub",
   },
   link: {
     modal: {

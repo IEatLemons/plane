@@ -405,6 +405,7 @@ export default {
   keyboard_shortcuts: "Scurtături tastatură",
   whats_new: "Ce e nou?",
   version: "Versiune",
+  source_repository: "Source repository",
   we_are_having_trouble_fetching_the_updates: "Avem probleme în a prelua actualizările.",
   our_changelogs: "jurnalele noastre de modificări",
   for_the_latest_updates: "pentru cele mai recente actualizări.",
@@ -637,6 +638,7 @@ export default {
     manage_widgets: "Gestionează mini-aplicațiile",
     title: "Acasă",
     star_us_on_github: "Dă-ne o stea pe GitHub",
+    this_fork_on_github: "This fork on GitHub",
   },
   link: {
     modal: {

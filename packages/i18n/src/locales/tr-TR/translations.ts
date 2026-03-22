@@ -402,6 +402,7 @@ export default {
   keyboard_shortcuts: "Klavye Kısayolları",
   whats_new: "Yenilikler",
   version: "Sürüm",
+  source_repository: "Source repository",
   we_are_having_trouble_fetching_the_updates: "Güncellemeler alınırken sorun oluştu.",
   our_changelogs: "değişiklik kayıtlarımızı",
   for_the_latest_updates: "en son güncellemeler için",
@@ -633,6 +634,7 @@ export default {
     manage_widgets: "Widget'ları yönet",
     title: "Ana Sayfa",
     star_us_on_github: "Bizi GitHub'da yıldızlayın",
+    this_fork_on_github: "This fork on GitHub",
   },
   link: {
     modal: {

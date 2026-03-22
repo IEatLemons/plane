@@ -405,6 +405,7 @@ export default {
   keyboard_shortcuts: "Phím tắt",
   whats_new: "Có gì mới",
   version: "Phiên bản",
+  source_repository: "Source repository",
   we_are_having_trouble_fetching_the_updates: "Chúng tôi đang gặp sự cố khi lấy bản cập nhật.",
   our_changelogs: "Nhật ký thay đổi của chúng tôi",
   for_the_latest_updates: "Để cập nhật mới nhất.",
@@ -639,6 +640,7 @@ export default {
     manage_widgets: "Quản lý tiện ích",
     title: "Trang chủ",
     star_us_on_github: "Gắn sao cho chúng tôi trên GitHub",
+    this_fork_on_github: "This fork on GitHub",
   },
   link: {
     modal: {

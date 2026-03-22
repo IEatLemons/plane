@@ -30,7 +30,9 @@ type RuntimeEnvKey =
   | "VITE_WEBSITE_URL"
   | "VITE_SUPPORT_EMAIL"
   | "VITE_ENABLE_SESSION_RECORDER"
-  | "VITE_SESSION_RECORDER_KEY";
+  | "VITE_SESSION_RECORDER_KEY"
+  | "VITE_GITHUB_STAR_URL"
+  | "VITE_GITHUB_FORK_URL";
 
 /** Defaults when neither runtime nor build-time env is set (local dev / Docker without overrides). */
 const LOCAL_DEFAULTS: Record<RuntimeEnvKey, string> = {
@@ -48,6 +50,10 @@ const LOCAL_DEFAULTS: Record<RuntimeEnvKey, string> = {
   VITE_SUPPORT_EMAIL: "support@plane.so",
   VITE_ENABLE_SESSION_RECORDER: "0",
   VITE_SESSION_RECORDER_KEY: "",
+  /** Set in apps/web/.env or Docker `-e` / `runtime-env.js` — your repo for "Star on GitHub" (empty = hide or use fork). */
+  VITE_GITHUB_STAR_URL: "",
+  /** Optional second link when different from star URL (e.g. upstream vs your fork). */
+  VITE_GITHUB_FORK_URL: "",
 };
 
 const viteBuildEnv: Record<RuntimeEnvKey, string | undefined> = {
@@ -65,6 +71,8 @@ const viteBuildEnv: Record<RuntimeEnvKey, string | undefined> = {
   VITE_SUPPORT_EMAIL: import.meta.env.VITE_SUPPORT_EMAIL,
   VITE_ENABLE_SESSION_RECORDER: import.meta.env.VITE_ENABLE_SESSION_RECORDER,
   VITE_SESSION_RECORDER_KEY: import.meta.env.VITE_SESSION_RECORDER_KEY,
+  VITE_GITHUB_STAR_URL: import.meta.env.VITE_GITHUB_STAR_URL,
+  VITE_GITHUB_FORK_URL: import.meta.env.VITE_GITHUB_FORK_URL,
 };
 
 function readEnv(key: RuntimeEnvKey): string {
@@ -116,4 +124,23 @@ export function getEnableSessionRecorder(): number {
 
 export function getSessionRecorderKey(): string {
   return readEnv("VITE_SESSION_RECORDER_KEY");
+}
+
+/** Repo for "Star on GitHub": explicit `VITE_GITHUB_STAR_URL`, else `VITE_GITHUB_FORK_URL`. */
+export function getGithubStarUrl(): string {
+  const star = readEnv("VITE_GITHUB_STAR_URL").trim();
+  if (star) return star;
+  return readEnv("VITE_GITHUB_FORK_URL").trim();
+}
+
+/** Optional fork URL for a second header link when it differs from the star target. */
+export function getGithubForkUrl(): string {
+  return readEnv("VITE_GITHUB_FORK_URL").trim();
+}
+
+/** `…/issues/new/choose` for the resolved GitHub repo; empty when no repo is configured. */
+export function getGithubNewIssueUrl(): string {
+  const base = getGithubStarUrl().replace(/\/$/, "");
+  if (!base) return "";
+  return `${base}/issues/new/choose`;
 }

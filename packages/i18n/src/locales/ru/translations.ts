@@ -408,6 +408,7 @@ export default {
   keyboard_shortcuts: "Горячие клавиши",
   whats_new: "Что нового?",
   version: "Версия",
+  source_repository: "Source repository",
   we_are_having_trouble_fetching_the_updates: "Возникли проблемы с получением обновлений.",
   our_changelogs: "наши журналы изменений",
   for_the_latest_updates: "для последних обновлений.",
@@ -643,6 +644,7 @@ export default {
     manage_widgets: "Управление виджетами",
     title: "Главная",
     star_us_on_github: "Оцените нас на GitHub",
+    this_fork_on_github: "This fork on GitHub",
   },
   link: {
     modal: {

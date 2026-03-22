@@ -404,6 +404,7 @@ export default {
   keyboard_shortcuts: "Pintasan keyboard",
   whats_new: "Apa yang baru?",
   version: "Versi",
+  source_repository: "Source repository",
   we_are_having_trouble_fetching_the_updates: "Kami mengalami kesulitan mengambil pembaruan.",
   our_changelogs: "changelog kami",
   for_the_latest_updates: "untuk pembaruan terbaru.",
@@ -635,6 +636,7 @@ export default {
     manage_widgets: "Kelola widget",
     title: "Beranda",
     star_us_on_github: "Bintang kami di GitHub",
+    this_fork_on_github: "This fork on GitHub",
   },
   link: {
     modal: {

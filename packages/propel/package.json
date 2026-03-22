@@ -5,46 +5,206 @@
   "license": "AGPL-3.0",
   "type": "module",
   "exports": {
-    "./accordion": "./dist/accordion/index.js",
-    "./animated-counter": "./dist/animated-counter/index.js",
-    "./avatar": "./dist/avatar/index.js",
-    "./badge": "./dist/badge/index.js",
-    "./banner": "./dist/banner/index.js",
-    "./button": "./dist/button/index.js",
-    "./calendar": "./dist/calendar/index.js",
-    "./card": "./dist/card/index.js",
-    "./charts/area-chart": "./dist/charts/area-chart/index.js",
-    "./charts/bar-chart": "./dist/charts/bar-chart/index.js",
-    "./charts/line-chart": "./dist/charts/line-chart/index.js",
-    "./charts/pie-chart": "./dist/charts/pie-chart/index.js",
-    "./charts/radar-chart": "./dist/charts/radar-chart/index.js",
-    "./charts/scatter-chart": "./dist/charts/scatter-chart/index.js",
-    "./charts/tree-map": "./dist/charts/tree-map/index.js",
-    "./collapsible": "./dist/collapsible/index.js",
-    "./combobox": "./dist/combobox/index.js",
-    "./command": "./dist/command/index.js",
-    "./context-menu": "./dist/context-menu/index.js",
-    "./dialog": "./dist/dialog/index.js",
-    "./emoji-icon-picker": "./dist/emoji-icon-picker/index.js",
-    "./emoji-reaction": "./dist/emoji-reaction/index.js",
-    "./empty-state": "./dist/empty-state/index.js",
-    "./icon-button": "./dist/icon-button/index.js",
-    "./icons": "./dist/icons/index.js",
-    "./input": "./dist/input/index.js",
-    "./menu": "./dist/menu/index.js",
-    "./pill": "./dist/pill/index.js",
-    "./popover": "./dist/popover/index.js",
-    "./portal": "./dist/portal/index.js",
-    "./scrollarea": "./dist/scrollarea/index.js",
-    "./skeleton": "./dist/skeleton/index.js",
-    "./switch": "./dist/switch/index.js",
-    "./tab-navigation": "./dist/tab-navigation/index.js",
-    "./table": "./dist/table/index.js",
-    "./tabs": "./dist/tabs/index.js",
-    "./toast": "./dist/toast/index.js",
-    "./toolbar": "./dist/toolbar/index.js",
-    "./tooltip": "./dist/tooltip/index.js",
-    "./utils": "./dist/utils/index.js",
+    "./accordion": {
+      "types": "./dist/accordion/index.d.ts",
+      "import": "./dist/accordion/index.js",
+      "default": "./dist/accordion/index.js"
+    },
+    "./animated-counter": {
+      "types": "./dist/animated-counter/index.d.ts",
+      "import": "./dist/animated-counter/index.js",
+      "default": "./dist/animated-counter/index.js"
+    },
+    "./avatar": {
+      "types": "./dist/avatar/index.d.ts",
+      "import": "./dist/avatar/index.js",
+      "default": "./dist/avatar/index.js"
+    },
+    "./badge": {
+      "types": "./dist/badge/index.d.ts",
+      "import": "./dist/badge/index.js",
+      "default": "./dist/badge/index.js"
+    },
+    "./banner": {
+      "types": "./dist/banner/index.d.ts",
+      "import": "./dist/banner/index.js",
+      "default": "./dist/banner/index.js"
+    },
+    "./button": {
+      "types": "./dist/button/index.d.ts",
+      "import": "./dist/button/index.js",
+      "default": "./dist/button/index.js"
+    },
+    "./calendar": {
+      "types": "./dist/calendar/index.d.ts",
+      "import": "./dist/calendar/index.js",
+      "default": "./dist/calendar/index.js"
+    },
+    "./card": {
+      "types": "./dist/card/index.d.ts",
+      "import": "./dist/card/index.js",
+      "default": "./dist/card/index.js"
+    },
+    "./charts/area-chart": {
+      "types": "./dist/charts/area-chart/index.d.ts",
+      "import": "./dist/charts/area-chart/index.js",
+      "default": "./dist/charts/area-chart/index.js"
+    },
+    "./charts/bar-chart": {
+      "types": "./dist/charts/bar-chart/index.d.ts",
+      "import": "./dist/charts/bar-chart/index.js",
+      "default": "./dist/charts/bar-chart/index.js"
+    },
+    "./charts/line-chart": {
+      "types": "./dist/charts/line-chart/index.d.ts",
+      "import": "./dist/charts/line-chart/index.js",
+      "default": "./dist/charts/line-chart/index.js"
+    },
+    "./charts/pie-chart": {
+      "types": "./dist/charts/pie-chart/index.d.ts",
+      "import": "./dist/charts/pie-chart/index.js",
+      "default": "./dist/charts/pie-chart/index.js"
+    },
+    "./charts/radar-chart": {
+      "types": "./dist/charts/radar-chart/index.d.ts",
+      "import": "./dist/charts/radar-chart/index.js",
+      "default": "./dist/charts/radar-chart/index.js"
+    },
+    "./charts/scatter-chart": {
+      "types": "./dist/charts/scatter-chart/index.d.ts",
+      "import": "./dist/charts/scatter-chart/index.js",
+      "default": "./dist/charts/scatter-chart/index.js"
+    },
+    "./charts/tree-map": {
+      "types": "./dist/charts/tree-map/index.d.ts",
+      "import": "./dist/charts/tree-map/index.js",
+      "default": "./dist/charts/tree-map/index.js"
+    },
+    "./collapsible": {
+      "types": "./dist/collapsible/index.d.ts",
+      "import": "./dist/collapsible/index.js",
+      "default": "./dist/collapsible/index.js"
+    },
+    "./combobox": {
+      "types": "./dist/combobox/index.d.ts",
+      "import": "./dist/combobox/index.js",
+      "default": "./dist/combobox/index.js"
+    },
+    "./command": {
+      "types": "./dist/command/index.d.ts",
+      "import": "./dist/command/index.js",
+      "default": "./dist/command/index.js"
+    },
+    "./context-menu": {
+      "types": "./dist/context-menu/index.d.ts",
+      "import": "./dist/context-menu/index.js",
+      "default": "./dist/context-menu/index.js"
+    },
+    "./dialog": {
+      "types": "./dist/dialog/index.d.ts",
+      "import": "./dist/dialog/index.js",
+      "default": "./dist/dialog/index.js"
+    },
+    "./emoji-icon-picker": {
+      "types": "./dist/emoji-icon-picker/index.d.ts",
+      "import": "./dist/emoji-icon-picker/index.js",
+      "default": "./dist/emoji-icon-picker/index.js"
+    },
+    "./emoji-reaction": {
+      "types": "./dist/emoji-reaction/index.d.ts",
+      "import": "./dist/emoji-reaction/index.js",
+      "default": "./dist/emoji-reaction/index.js"
+    },
+    "./empty-state": {
+      "types": "./dist/empty-state/index.d.ts",
+      "import": "./dist/empty-state/index.js",
+      "default": "./dist/empty-state/index.js"
+    },
+    "./icon-button": {
+      "types": "./dist/icon-button/index.d.ts",
+      "import": "./dist/icon-button/index.js",
+      "default": "./dist/icon-button/index.js"
+    },
+    "./icons": {
+      "types": "./dist/icons/index.d.ts",
+      "import": "./dist/icons/index.js",
+      "default": "./dist/icons/index.js"
+    },
+    "./input": {
+      "types": "./dist/input/index.d.ts",
+      "import": "./dist/input/index.js",
+      "default": "./dist/input/index.js"
+    },
+    "./menu": {
+      "types": "./dist/menu/index.d.ts",
+      "import": "./dist/menu/index.js",
+      "default": "./dist/menu/index.js"
+    },
+    "./pill": {
+      "types": "./dist/pill/index.d.ts",
+      "import": "./dist/pill/index.js",
+      "default": "./dist/pill/index.js"
+    },
+    "./popover": {
+      "types": "./dist/popover/index.d.ts",
+      "import": "./dist/popover/index.js",
+      "default": "./dist/popover/index.js"
+    },
+    "./portal": {
+      "types": "./dist/portal/index.d.ts",
+      "import": "./dist/portal/index.js",
+      "default": "./dist/portal/index.js"
+    },
+    "./scrollarea": {
+      "types": "./dist/scrollarea/index.d.ts",
+      "import": "./dist/scrollarea/index.js",
+      "default": "./dist/scrollarea/index.js"
+    },
+    "./skeleton": {
+      "types": "./dist/skeleton/index.d.ts",
+      "import": "./dist/skeleton/index.js",
+      "default": "./dist/skeleton/index.js"
+    },
+    "./switch": {
+      "types": "./dist/switch/index.d.ts",
+      "import": "./dist/switch/index.js",
+      "default": "./dist/switch/index.js"
+    },
+    "./tab-navigation": {
+      "types": "./dist/tab-navigation/index.d.ts",
+      "import": "./dist/tab-navigation/index.js",
+      "default": "./dist/tab-navigation/index.js"
+    },
+    "./table": {
+      "types": "./dist/table/index.d.ts",
+      "import": "./dist/table/index.js",
+      "default": "./dist/table/index.js"
+    },
+    "./tabs": {
+      "types": "./dist/tabs/index.d.ts",
+      "import": "./dist/tabs/index.js",
+      "default": "./dist/tabs/index.js"
+    },
+    "./toast": {
+      "types": "./dist/toast/index.d.ts",
+      "import": "./dist/toast/index.js",
+      "default": "./dist/toast/index.js"
+    },
+    "./toolbar": {
+      "types": "./dist/toolbar/index.d.ts",
+      "import": "./dist/toolbar/index.js",
+      "default": "./dist/toolbar/index.js"
+    },
+    "./tooltip": {
+      "types": "./dist/tooltip/index.d.ts",
+      "import": "./dist/tooltip/index.js",
+      "default": "./dist/tooltip/index.js"
+    },
+    "./utils": {
+      "types": "./dist/utils/index.d.ts",
+      "import": "./dist/utils/index.js",
+      "default": "./dist/utils/index.js"
+    },
     "./package.json": "./package.json",
     "./styles/react-day-picker.css": "./dist/styles/react-day-picker.css",
     "./styles/react-day-picker": "./dist/styles/react-day-picker.css"

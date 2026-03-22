@@ -391,6 +391,7 @@ export default {
   keyboard_shortcuts: "键盘快捷键",
   whats_new: "新功能",
   version: "版本",
+  source_repository: "源码仓库",
   we_are_having_trouble_fetching_the_updates: "我们在获取更新时遇到问题。",
   our_changelogs: "我们的更新日志",
   for_the_latest_updates: "获取最新更新。",
@@ -620,6 +621,7 @@ export default {
     manage_widgets: "管理小部件",
     title: "首页",
     star_us_on_github: "在GitHub上为我们加星",
+    this_fork_on_github: "本部署源码（GitHub）",
   },
   link: {
     modal: {

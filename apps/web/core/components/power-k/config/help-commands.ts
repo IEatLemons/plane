@@ -5,6 +5,7 @@
  */
 
 import { FileText, GithubIcon, MessageSquare, Rocket } from "lucide-react";
+import { getGithubNewIssueUrl } from "@plane/constants";
 // components
 import type { TPowerKCommandConfig } from "@/components/power-k/core/types";
 // hooks
@@ -65,10 +66,11 @@ export const usePowerKHelpCommands = (): TPowerKCommandConfig[] => {
       i18n_title: "power_k.help_actions.report_bug",
       icon: GithubIcon,
       action: () => {
-        window.open("https://github.com/makeplane/plane/issues/new/choose", "_blank", "noopener,noreferrer");
+        const url = getGithubNewIssueUrl();
+        if (url) window.open(url, "_blank", "noopener,noreferrer");
       },
-      isEnabled: () => true,
-      isVisible: () => true,
+      isEnabled: () => Boolean(getGithubNewIssueUrl()),
+      isVisible: () => Boolean(getGithubNewIssueUrl()),
       closeOnSelect: true,
     },
     {

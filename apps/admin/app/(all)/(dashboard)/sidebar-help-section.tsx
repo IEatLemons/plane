@@ -9,7 +9,7 @@ import { observer } from "mobx-react";
 import Link from "next/link";
 import { HelpCircle, MessageSquare, MoveLeft } from "lucide-react";
 import { Transition } from "@headlessui/react";
-import { WEB_BASE_URL } from "@plane/constants";
+import { WEB_BASE_URL, getGithubNewIssueUrl } from "@plane/constants";
 // plane internal packages
 import { GithubIcon, NewTabIcon, PageIcon } from "@plane/propel/icons";
 import { Tooltip } from "@plane/propel/tooltip";
@@ -18,7 +18,7 @@ import { cn } from "@plane/utils";
 import { useInstance, useTheme } from "@/hooks/store";
 // assets
 
-const helpOptions = [
+const baseHelpOptions = [
   {
     name: "Documentation",
     href: "https://docs.plane.so/",
@@ -29,16 +29,16 @@ const helpOptions = [
     href: "https://forum.plane.so",
     Icon: MessageSquare,
   },
-  {
-    name: "Report a bug",
-    href: "https://github.com/makeplane/plane/issues/new/choose",
-    Icon: GithubIcon,
-  },
 ];
 
 export const AdminSidebarHelpSection = observer(function AdminSidebarHelpSection() {
   // states
   const [isNeedHelpOpen, setIsNeedHelpOpen] = useState(false);
+  const bugReportUrl = getGithubNewIssueUrl();
+  const helpOptions = [
+    ...baseHelpOptions,
+    ...(bugReportUrl ? [{ name: "Report a bug" as const, href: bugReportUrl, Icon: GithubIcon }] : []),
+  ];
   // store
   const { instance } = useInstance();
   const { isSidebarCollapsed, toggleSidebar } = useTheme();

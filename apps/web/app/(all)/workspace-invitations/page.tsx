@@ -9,6 +9,7 @@ import { useSearchParams } from "next/navigation";
 import useSWR from "swr";
 import { Boxes, Share2, Star, User2 } from "lucide-react";
 import { CheckIcon, CloseIcon } from "@plane/propel/icons";
+import { getGithubStarUrl } from "@plane/constants";
 // components
 import { LogoSpinner } from "@/components/common/logo-spinner";
 import { EmptySpace, EmptySpaceItem } from "@/components/ui/empty-space";
@@ -54,10 +55,9 @@ function WorkspaceInvitationPage() {
       })
       .then(() => {
         if (invitationDetail.email === currentUser?.email) {
-          router.push(`/${invitationDetail.workspace.slug}`);
-        } else {
-          router.push("/");
+          return router.push(`/${invitationDetail.workspace.slug}`);
         }
+        return router.push("/");
       })
       .catch((err: unknown) => console.error(err));
   };
@@ -69,9 +69,7 @@ function WorkspaceInvitationPage() {
         accepted: false,
         token: token,
       })
-      .then(() => {
-        router.push("/");
-      })
+      .then(() => router.push("/"))
       .catch((err: unknown) => console.error(err));
   };
 
@@ -111,7 +109,9 @@ function WorkspaceInvitationPage() {
               ) : (
                 <EmptySpaceItem Icon={Boxes} title="Continue to home" href="/" />
               )}
-              <EmptySpaceItem Icon={Star} title="Star us on GitHub" href="https://github.com/makeplane" />
+              {getGithubStarUrl() ? (
+                <EmptySpaceItem Icon={Star} title="Star us on GitHub" href={getGithubStarUrl()} />
+              ) : null}
               <EmptySpaceItem
                 Icon={Share2}
                 title="Join our community of active creators"

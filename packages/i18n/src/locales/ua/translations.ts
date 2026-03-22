@@ -408,6 +408,7 @@ export default {
   keyboard_shortcuts: "Гарячі клавіші",
   whats_new: "Що нового?",
   version: "Версія",
+  source_repository: "Source repository",
   we_are_having_trouble_fetching_the_updates: "Виникли проблеми з отриманням оновлень.",
   our_changelogs: "наш журнал змін",
   for_the_latest_updates: "для найсвіжіших оновлень.",
@@ -643,6 +644,7 @@ export default {
     manage_widgets: "Керувати віджетами",
     title: "Головна",
     star_us_on_github: "Оцініть нас на GitHub",
+    this_fork_on_github: "This fork on GitHub",
   },
   link: {
     modal: {
