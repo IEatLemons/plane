@@ -10,7 +10,7 @@ import { Links, Meta, Outlet, Scripts } from "react-router";
 import type { LinksFunction } from "react-router";
 import { ThemeProvider, useTheme } from "next-themes";
 // plane imports
-import { SITE_DESCRIPTION, SITE_NAME } from "@plane/constants";
+import { SITE_DESCRIPTION, SITE_NAME, getEnableSessionRecorder, getSessionRecorderKey } from "@plane/constants";
 import { cn } from "@plane/utils";
 // types
 // assets
@@ -27,11 +27,13 @@ import { LogoSpinner } from "@/components/common/logo-spinner";
 // local
 import { CustomErrorComponent } from "./error";
 import { AppProvider } from "./provider";
-// fonts
+// fonts (side-effect CSS from font packages)
+/* eslint-disable import/no-unassigned-import */
 import "@fontsource-variable/inter";
 import interVariableWoff2 from "@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url";
 import "@fontsource/material-symbols-rounded";
 import "@fontsource/ibm-plex-mono";
+/* eslint-enable import/no-unassigned-import */
 
 const APP_TITLE = "Plane | Simple, extensible, open-source project management tool.";
 
@@ -55,7 +57,8 @@ export const links: LinksFunction = () => [
 ];
 
 export function Layout({ children }: { children: ReactNode }) {
-  const isSessionRecorderEnabled = parseInt(process.env.VITE_ENABLE_SESSION_RECORDER || "0");
+  const isSessionRecorderEnabled = getEnableSessionRecorder();
+  const sessionRecorderKey = getSessionRecorderKey();
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -80,13 +83,13 @@ export function Layout({ children }: { children: ReactNode }) {
           {children}
         </ThemeProvider>
         <Scripts />
-        {!!isSessionRecorderEnabled && process.env.VITE_SESSION_RECORDER_KEY && (
+        {!!isSessionRecorderEnabled && sessionRecorderKey && (
           <Script id="clarity-tracking">
             {`(function(c,l,a,r,i,t,y){
               c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
               t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
               y=l.getElementsByTagName(r)[0];if(y){y.parentNode.insertBefore(t,y);}
-          })(window, document, "clarity", "script", "${process.env.VITE_SESSION_RECORDER_KEY}");`}
+          })(window, document, "clarity", "script", "${sessionRecorderKey}");`}
           </Script>
         )}
       </body>

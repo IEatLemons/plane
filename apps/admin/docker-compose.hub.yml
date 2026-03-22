@@ -1,0 +1,17 @@
+# Hub / 预构建镜像：使用已推送到仓库的 admin 静态资源镜像，无需本地 build。
+#
+# 在仓库根目录执行：
+#   PLANE_ADMIN_IMAGE=你的镜像 PLANE_ADMIN_PUBLISH_PORT=3001 \
+#     docker compose --project-directory apps/admin -f apps/admin/docker-compose.hub.yml up -d
+#
+# 构建镜像（上下文为仓库根目录）：
+#   docker build -f apps/admin/Dockerfile.admin -t your/plane-admin:latest \
+#     --build-arg VITE_API_BASE_URL=https://api.example.com \
+#     --build-arg VITE_ADMIN_BASE_URL=https://app.example.com \
+#     .
+
+services:
+  admin:
+    image: ${PLANE_ADMIN_IMAGE:-ieatlemons/plane-admin:latest}
+    ports:
+      - "${PLANE_ADMIN_PUBLISH_PORT:-3001}:3000"

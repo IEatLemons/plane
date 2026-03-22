@@ -362,3 +362,115 @@ railway logs
 3. 把 `apps/api/.env.example` 的变量迁移到 Railway Variables，并把 `plane-db/plane-redis/plane-mq` 全替换成 Railway 的连接信息。
 4. 跑一次迁移：`railway run ./bin/docker-entrypoint-migrator.sh`。
 5. 部署并看日志：`railway up` / `railway logs`。
+
+---
+
+## 11. 前端 Web / Admin：打包镜像、发布、Railway 部署（域名与环境变量）
+
+本节对应流程：**① 打成 Docker 镜像 → ② 推送到镜像仓库 → ③ 在 Railway 部署**。
+
+### 11.1 Web：运行期环境变量（`docker run` / Railway Variables）
+
+**Web 镜像（`apps/web/Dockerfile.web`）** 在构建时**不再**要求传入 `VITE_*`。容器启动时，入口脚本根据 **环境变量** 生成 `/runtime-env.js`，浏览器在加载应用前执行该脚本，将 `window.__PLANE_RUNTIME_CONFIG__` 设为与 `VITE_*` 同名的键（见 `apps/web/nginx/docker-entrypoint.sh`）。
+
+- **默认值**与 `apps/web/.env.example` 一致（本地开发地址）；未设置时使用这些默认。
+- **覆盖方式**：`docker run -e VITE_API_BASE_URL=https://api.example.com ...`，或在 Railway 的 **Variables** 里添加同名变量（**不需要**勾选 Build Time）。
+- **`PORT`**：Railway 自动注入；入口脚本将 nginx 监听端口改为 `$PORT`。
+
+本地开发与 `pnpm dev` 仍使用 `apps/web/.env` → `import.meta.env`；Docker 中由运行时脚本优先生效。
+
+### 11.2 Admin：仍为构建期注入（当前 Dockerfile）
+
+**Admin 镜像（`apps/admin/Dockerfile.admin`）** 仍通过 **`docker build --build-arg VITE_*=...`**（或 Railway 构建变量 + **Available at Build Time**）传入 URL；与 Web 行为不同，部署 Admin 时需按该 Dockerfile 的 `ARG` 准备构建参数。
+
+### 11.3 构建期 vs 运行期对照
+
+| 类型                               | Web 镜像                        | Admin 镜像（当前）                      |
+| ---------------------------------- | ------------------------------- | --------------------------------------- |
+| `VITE_*` 域名/API 等               | **容器运行时**环境变量          | **构建镜像时** `--build-arg` 或构建变量 |
+| `PORT`                             | **运行时**（Railway 注入）      | **运行时**（同上）                      |
+| API 的 `CORS_*`、`APP_BASE_URL` 等 | **API 服务**变量，见上文第 4 节 | 同左                                    |
+
+### 11.4 ① 在仓库根目录构建镜像
+
+上下文必须是 **monorepo 根目录**（`.`），否则 `turbo prune` 无法工作。
+
+**Web（无需为域名传 build-arg）：**
+
+```bash
+cd /path/to/codePlane
+
+docker build -f apps/web/Dockerfile.web -t YOUR_REGISTRY/plane-web:TAG .
+```
+
+**Admin（仍需 build-arg，示例）：**
+
+```bash
+docker build -f apps/admin/Dockerfile.admin -t YOUR_REGISTRY/plane-admin:TAG \
+  --build-arg VITE_API_BASE_URL="https://你的API域名" \
+  --build-arg VITE_API_BASE_PATH="/api" \
+  --build-arg VITE_WEB_BASE_URL="https://你的主站域名" \
+  --build-arg VITE_ADMIN_BASE_URL="https://你的主站域名" \
+  --build-arg VITE_ADMIN_BASE_PATH="/god-mode" \
+  --build-arg VITE_SPACE_BASE_URL="https://你的Space域名" \
+  --build-arg VITE_LIVE_BASE_URL="https://你的Live域名" \
+  .
+```
+
+若 Admin 与 Web 同域、仅路径不同（例如主站 `https://app.example.com`，管理台 `https://app.example.com/god-mode`），则 `VITE_ADMIN_BASE_URL` 应与主站根 URL 一致，与本地 `.env.example` 写法相同。
+
+### 11.5 ② 发布镜像
+
+登录镜像仓库（示例：Docker Hub、GitHub Container Registry `ghcr.io`），打标签并推送：
+
+```bash
+docker login YOUR_REGISTRY
+
+docker push YOUR_REGISTRY/plane-web:TAG
+docker push YOUR_REGISTRY/plane-admin:TAG
+```
+
+**架构（常见踩坑）**：在 **Apple Silicon（M 系列）或 ARM 机器**上默认构建出的是 **`linux/arm64`** 镜像；多数云端（Zeabur、Railway、部分 K8s）节点为 **`linux/amd64`**，会报「镜像没有 amd64 变体」。本地或 CI 推镜像前请显式指定：
+
+```bash
+docker build --platform linux/amd64 -f apps/web/Dockerfile.web -t YOUR_REGISTRY/plane-web:TAG .
+```
+
+推送后用 `docker manifest inspect YOUR_REGISTRY/plane-web:TAG` 确认含 `amd64`。
+
+CI 可参考 `.github/workflows/build-branch.yml` 中的 `branch_build_push_web` / `branch_build_push_admin`（构建上下文为 `.`，Dockerfile 路径同上）。
+
+### 11.6 ③ 在 Railway 部署
+
+**方式 A：使用已推送的镜像（推荐与「先本地/CI 构建再部署」一致）**
+
+1. Railway：**New → Empty Service**（或 Project 内 **New Service**）。
+2. **Settings → Source**：选择 **Docker Image**，填入 `YOUR_REGISTRY/plane-web:TAG`（Admin 同理再建一个 Service）。
+3. **Networking**：生成公网域名或绑定自定义域名。
+4. **Variables（Web）**：在 Railway 中为 **Web 服务**设置 `VITE_API_BASE_URL`、`VITE_WEB_BASE_URL` 等（与 `docker-entrypoint.sh` 中变量名一致）；**无需**勾选 Build Time。Railway 会自动提供 **`PORT`**。
+
+**方式 B：连接 GitHub，由 Railway 在云端构建**
+
+1. **New → GitHub Repo**，选中本仓库。
+2. **Settings → Build**：**Dockerfile Path** 填 `apps/web/Dockerfile.web` 或 `apps/admin/Dockerfile.admin`；**Root Directory** 可留空（构建上下文需为仓库根，与 Dockerfile 中 `COPY . .` 一致；若 Railway 提供「Context」选项，应选仓库根）。
+3. **Web**：构建阶段**不需要**为 `VITE_*` 配置构建变量；部署后在 **Variables** 中设置运行时变量即可。
+4. **Admin**：若 Dockerfile 仍含 `ARG VITE_*`，需在 **Variables** 中勾选 **Available at Build Time** 并传入，或改用预构建镜像。
+5. 触发部署；Web 改域名时**重新部署**即可（会拉新镜像或重启容器），**无需**为 Web 重新构建以改 URL。
+
+### 11.7 与 API、反向代理对齐
+
+部署完 Web/Admin 后，在 **API 服务**的 Variables 中更新（示例）：
+
+- `CORS_ALLOWED_ORIGINS`：包含主站、Admin、Space、Live 等前端来源的完整 HTTPS URL（逗号分隔）。
+- `APP_BASE_URL`、`ADMIN_BASE_URL`、`SPACE_BASE_URL`、`LIVE_BASE_URL`：与你在 `VITE_*` 里配置的对外 URL 一致。
+
+若使用 Railway 多服务 + 自有网关/反代，请保证浏览器访问的 **页面域名** 与上述变量一致，否则会出现跨域或跳转错误。
+
+### 11.8 仅用 Compose 验证本地镜像（可选）
+
+仓库根目录构建完成后，可用环境变量指定镜像名做冒烟（见 `apps/web/docker-compose.hub.yml`、`apps/admin/docker-compose.hub.yml`）：
+
+```bash
+PLANE_WEB_IMAGE=YOUR_REGISTRY/plane-web:TAG PLANE_WEB_PUBLISH_PORT=3000 \
+  docker compose --project-directory apps/web -f apps/web/docker-compose.hub.yml up
+```

@@ -7,9 +7,10 @@
 import Script from "next/script";
 
 // styles
+// eslint-disable-next-line import/no-unassigned-import -- side-effect global stylesheet
 import "@/styles/globals.css";
 
-import { SITE_DESCRIPTION, SITE_NAME } from "@plane/constants";
+import { SITE_DESCRIPTION, SITE_NAME, getEnableSessionRecorder, getSessionRecorderKey } from "@plane/constants";
 
 // helpers
 import { cn } from "@plane/utils";
@@ -56,7 +57,8 @@ export const meta = () => [
 ];
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  const isSessionRecorderEnabled = parseInt(process.env.VITE_ENABLE_SESSION_RECORDER || "0");
+  const isSessionRecorderEnabled = getEnableSessionRecorder();
+  const sessionRecorderKey = getSessionRecorderKey();
 
   return (
     <html lang="en">
@@ -87,13 +89,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </div>
         </AppProvider>
       </body>
-      {!!isSessionRecorderEnabled && process.env.VITE_SESSION_RECORDER_KEY && (
+      {!!isSessionRecorderEnabled && sessionRecorderKey && (
         <Script id="clarity-tracking">
           {`(function(c,l,a,r,i,t,y){
               c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
               t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
               y=l.getElementsByTagName(r)[0];if(y){y.parentNode.insertBefore(t,y);}
-          })(window, document, "clarity", "script", "${process.env.VITE_SESSION_RECORDER_KEY}");`}
+          })(window, document, "clarity", "script", "${sessionRecorderKey}");`}
         </Script>
       )}
     </html>

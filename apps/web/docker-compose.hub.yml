@@ -1,0 +1,19 @@
+# Hub / 预构建镜像：使用已推送到仓库的 web 镜像，无需本地 build。
+#
+# 在仓库根目录执行：
+#   PLANE_WEB_IMAGE=你的镜像 PLANE_WEB_PUBLISH_PORT=3000 \
+#     docker compose --project-directory apps/web -f apps/web/docker-compose.hub.yml up -d
+#
+# VITE_* 在容器启动时由入口脚本写入 runtime-env.js（默认同 apps/web/.env.example），例如：
+#   docker compose ... up -d \
+#     -e VITE_API_BASE_URL=https://api.example.com \
+#     -e VITE_WEB_BASE_URL=https://app.example.com
+#
+# 构建镜像（无需再传 VITE_* build-arg）：
+#   docker build -f apps/web/Dockerfile.web -t your/plane-web:latest .
+
+services:
+  web:
+    image: ${PLANE_WEB_IMAGE:-ieatlemons/plane-web:latest}
+    ports:
+      - "${PLANE_WEB_PUBLISH_PORT:-3000}:3000"

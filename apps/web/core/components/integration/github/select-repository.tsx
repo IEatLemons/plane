@@ -12,6 +12,7 @@ import type { IWorkspaceIntegration } from "@plane/types";
 // ui
 import { CustomSearchSelect } from "@plane/ui";
 // helpers
+import { API_URL } from "@plane/constants";
 import { truncateText } from "@plane/utils";
 import { ProjectService } from "@/services/project";
 // types
@@ -34,9 +35,7 @@ export function SelectRepository(props: Props) {
   const getKey = (pageIndex: number) => {
     if (!workspaceSlug || !integration) return;
 
-    return `${process.env.VITE_API_BASE_URL}/api/workspaces/${workspaceSlug}/workspace-integrations/${
-      integration.id
-    }/github-repositories/?page=${++pageIndex}`;
+    return `${API_URL}/workspaces/${workspaceSlug}/workspace-integrations/${integration.id}/github-repositories/?page=${++pageIndex}`;
   };
 
   const fetchGithubRepos = async (url: string) => {
@@ -47,7 +46,7 @@ export function SelectRepository(props: Props) {
 
   const { data: paginatedData, size, setSize, isValidating } = useSWRInfinite(getKey, fetchGithubRepos);
 
-  let userRepositories = (paginatedData ?? []).map((data) => data.repositories).flat();
+  let userRepositories = (paginatedData ?? []).flatMap((data) => data.repositories);
   userRepositories = userRepositories.filter((data) => data?.id);
 
   const totalCount = paginatedData && paginatedData.length > 0 ? paginatedData[0].total_count : 0;
@@ -66,7 +65,7 @@ export function SelectRepository(props: Props) {
       value={value}
       options={options}
       onChange={(val: string) => {
-        const repo = userRepositories.find((repo) => repo.id === val);
+        const repo = userRepositories.find((item) => item.id === val);
 
         onChange(repo);
       }}

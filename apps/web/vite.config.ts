@@ -4,24 +4,20 @@ import { reactRouter } from "@react-router/dev/vite";
 import { defineConfig } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 
+import { planeRuntimeEnvPlugin } from "./vite-runtime-env-plugin";
+
 dotenv.config({ path: path.resolve(__dirname, ".env") });
 
-// Expose only vars starting with VITE_
-const viteEnv = Object.keys(process.env)
-  .filter((k) => k.startsWith("VITE_"))
-  .reduce<Record<string, string>>((a, k) => {
-    a[k] = process.env[k] ?? "";
-    return a;
-  }, {});
-
 export default defineConfig(() => ({
-  define: {
-    "process.env": JSON.stringify(viteEnv),
-  },
   build: {
     assetsInlineLimit: 0,
   },
-  plugins: [reactRouter(), tsconfigPaths({ projects: [path.resolve(__dirname, "tsconfig.json")] })],
+  plugins: [
+    reactRouter(),
+    tsconfigPaths({ projects: [path.resolve(__dirname, "tsconfig.json")] }),
+    // Must run after react-router so the generated index.html still gets the script.
+    planeRuntimeEnvPlugin(),
+  ],
   resolve: {
     alias: {
       // Next.js compatibility shims used within web
