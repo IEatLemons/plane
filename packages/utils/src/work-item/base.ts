@@ -272,13 +272,15 @@ export const getComputedDisplayFilters = (
   defaultValues?: IIssueDisplayFilterOptions
 ): IIssueDisplayFilterOptions => {
   const filters = !isEmpty(displayFilters) ? displayFilters : defaultValues;
+  const layout = filters?.layout || EIssueLayoutTypes.LIST;
+  const defaultOrderBy = layout === EIssueLayoutTypes.GANTT ? "start_date" : "sort_order";
   return {
     calendar: {
       show_weekends: filters?.calendar?.show_weekends || false,
       layout: filters?.calendar?.layout || "month",
     },
-    layout: filters?.layout || EIssueLayoutTypes.LIST,
-    order_by: filters?.order_by || "sort_order",
+    layout,
+    order_by: filters?.order_by ?? defaultOrderBy,
     group_by: filters?.group_by || null,
     sub_group_by: filters?.sub_group_by || null,
     sub_issue: filters?.sub_issue || false,

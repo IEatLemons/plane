@@ -104,6 +104,10 @@ export const MODULE_ORDER_BY_OPTIONS: {
     i18n_label: "project_modules.order_by.issues",
   },
   {
+    key: "start_date",
+    i18n_label: "project_modules.order_by.start_date",
+  },
+  {
     key: "target_date",
     i18n_label: "project_modules.order_by.due_date",
   },

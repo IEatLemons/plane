@@ -11,6 +11,8 @@ export type TModuleOrderByOptions =
   | "-progress"
   | "issues_length"
   | "-issues_length"
+  | "start_date"
+  | "-start_date"
   | "target_date"
   | "-target_date"
   | "created_at"

@@ -10,7 +10,7 @@ import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
 // plane imports
 import type { IWorkspaceSidebarNavigationItem } from "@plane/constants";
-import { EUserPermissionsLevel } from "@plane/constants";
+import { EUserPermissionsLevel, WORKSPACE_SIDEBAR_DYNAMIC_NAVIGATION_ITEMS } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
 import { joinUrlPath } from "@plane/utils";
 // components
@@ -18,6 +18,7 @@ import { SidebarNavItem } from "@/components/sidebar/sidebar-navigation";
 // hooks
 import { useAppTheme } from "@/hooks/store/use-app-theme";
 import { useUser, useUserPermissions } from "@/hooks/store/user";
+import { useIsLgBreakpoint } from "@/hooks/use-lg-breakpoint";
 import { useWorkspaceNavigationPreferences } from "@/hooks/use-navigation-preferences";
 // plane web imports
 import { getSidebarNavigationItemIcon } from "@/plane-web/components/workspace/sidebar/helper";
@@ -41,6 +42,9 @@ export const SidebarItemBase = observer(function SidebarItemBase({
   const { data } = useUser();
 
   const { toggleSidebar, isExtendedSidebarOpened, toggleExtendedSidebar } = useAppTheme();
+  const isLgScreen = useIsLgBreakpoint();
+
+  const isDynamicWorkspaceNavItem = item.key in WORKSPACE_SIDEBAR_DYNAMIC_NAVIGATION_ITEMS;
 
   const handleLinkClick = () => {
     if (window.innerWidth < 768) toggleSidebar();
@@ -61,7 +65,8 @@ export const SidebarItemBase = observer(function SidebarItemBase({
   if (!allowPermissions(item.access, EUserPermissionsLevel.WORKSPACE, slug)) return null;
 
   const isPinned = isWorkspaceItemPinned(item.key);
-  if (!isPinned && !staticItems.includes(item.key)) return null;
+  const showUnpinnedDynamicOnLargeScreen = isLgScreen && isDynamicWorkspaceNavItem;
+  if (!isPinned && !staticItems.includes(item.key) && !showUnpinnedDynamicOnLargeScreen) return null;
 
   const itemHref =
     item.key === "your_work" && data?.id ? joinUrlPath(slug, item.href, data?.id) : joinUrlPath(slug, item.href);

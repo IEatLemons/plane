@@ -2585,6 +2585,7 @@ export default {
       name: "名稱",
       progress: "進度",
       issues: "工作事項數量",
+      start_date: "開始日期",
       due_date: "截止日期",
       created_at: "建立日期",
       manual: "手動",

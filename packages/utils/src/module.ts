@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { sortBy } from "lodash-es";
+import { orderBy, sortBy } from "lodash-es";
 // plane imports
 import type { IModule, TModuleDisplayFilters, TModuleFilters, TModuleOrderByOptions } from "@plane/types";
 // local imports
@@ -30,8 +30,8 @@ export const orderModules = (modules: IModule[], orderByKey: TModuleOrderByOptio
   let orderedModules: IModule[] = [];
   if (modules.length === 0 || !orderByKey) return [];
 
-  if (orderByKey === "name") orderedModules = [...modules].sort((a, b) => naturalSort(a.name, b.name));
-  if (orderByKey === "-name") orderedModules = [...modules].sort((a, b) => naturalSort(b.name, a.name));
+  if (orderByKey === "name") orderedModules = [...modules].toSorted((a, b) => naturalSort(a.name, b.name));
+  if (orderByKey === "-name") orderedModules = [...modules].toSorted((a, b) => naturalSort(b.name, a.name));
   if (["progress", "-progress"].includes(orderByKey))
     orderedModules = sortBy(modules, [
       (m) => {
@@ -42,6 +42,12 @@ export const orderModules = (modules: IModule[], orderByKey: TModuleOrderByOptio
     ]);
   if (["issues_length", "-issues_length"].includes(orderByKey))
     orderedModules = sortBy(modules, [(m) => (orderByKey === "issues_length" ? m.total_issues : !m.total_issues)]);
+  if (["start_date", "-start_date"].includes(orderByKey))
+    orderedModules = orderBy(
+      modules,
+      [(m) => (m.start_date ? 0 : 1), (m) => m.start_date ?? ""],
+      ["asc", orderByKey === "start_date" ? "asc" : "desc"]
+    );
   if (orderByKey === "target_date") orderedModules = sortBy(modules, [(m) => m.target_date]);
   if (orderByKey === "-target_date") orderedModules = sortBy(modules, [(m) => !m.target_date]);
   if (orderByKey === "created_at") orderedModules = sortBy(modules, [(m) => m.created_at]);
