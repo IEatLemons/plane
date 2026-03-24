@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 一键构建 plane-api + plane-web 镜像，并更新根目录 VERSION。
+# 一键构建 plane-api + plane-web + plane-admin 镜像，并更新根目录 VERSION。
 # 用法:
 #   ./docker-build.sh              # VERSION patch +1 后构建
 #   ./docker-build.sh 1.0.7        # 指定版本（可写 V1.0.7）
@@ -60,8 +60,10 @@ printf '%s\n' "$NEW_VERSION" >"$VERSION_FILE"
 REGISTRY="${DOCKER_REGISTRY:-ieatlemon}"
 API_IMAGE="${REGISTRY}/plane-api:${NEW_VERSION}"
 WEB_IMAGE="${REGISTRY}/plane-web:${NEW_VERSION}"
+ADMIN_IMAGE="${REGISTRY}/plane-admin:${NEW_VERSION}"
 API_LATEST="${REGISTRY}/plane-api:latest"
 WEB_LATEST="${REGISTRY}/plane-web:latest"
+ADMIN_LATEST="${REGISTRY}/plane-admin:latest"
 
 PLATFORM_ARGS=()
 if [[ "${DOCKER_PLATFORM_NATIVE:-0}" == "1" ]]; then
@@ -72,9 +74,11 @@ fi
 
 TAG_LATEST_ARGS_API=(-t "$API_IMAGE")
 TAG_LATEST_ARGS_WEB=(-t "$WEB_IMAGE")
+TAG_LATEST_ARGS_ADMIN=(-t "$ADMIN_IMAGE")
 if [[ "${DOCKER_TAG_LATEST:-1}" != "0" ]]; then
   TAG_LATEST_ARGS_API+=(-t "$API_LATEST")
   TAG_LATEST_ARGS_WEB+=(-t "$WEB_LATEST")
+  TAG_LATEST_ARGS_ADMIN+=(-t "$ADMIN_LATEST")
 fi
 
 echo "=> VERSION=${NEW_VERSION}（已写入 $VERSION_FILE）"
@@ -86,9 +90,11 @@ fi
 if [[ "${DOCKER_TAG_LATEST:-1}" != "0" ]]; then
   echo "=> 构建 API: $API_IMAGE 与 $API_LATEST"
   echo "=> 构建 Web: $WEB_IMAGE 与 $WEB_LATEST"
+  echo "=> 构建 Admin: $ADMIN_IMAGE 与 $ADMIN_LATEST"
 else
   echo "=> 构建 API: $API_IMAGE"
   echo "=> 构建 Web: $WEB_IMAGE"
+  echo "=> 构建 Admin: $ADMIN_IMAGE"
 fi
 
 # 使用 command + 函数，避免「docker」与「build」被拆行或别名导致出现 `build: command not found`
@@ -98,12 +104,15 @@ docker_build() {
 
 docker_build "${PLATFORM_ARGS[@]}" -f "$ROOT/apps/api/Dockerfile.api" "${TAG_LATEST_ARGS_API[@]}" "$ROOT/apps/api"
 docker_build "${PLATFORM_ARGS[@]}" -f "$ROOT/apps/web/Dockerfile.web" "${TAG_LATEST_ARGS_WEB[@]}" "$ROOT"
+docker_build "${PLATFORM_ARGS[@]}" -f "$ROOT/apps/admin/Dockerfile.admin" "${TAG_LATEST_ARGS_ADMIN[@]}" "$ROOT"
 
 echo "=> 完成: $API_IMAGE"
 echo "=> 完成: $WEB_IMAGE"
+echo "=> 完成: $ADMIN_IMAGE"
 if [[ "${DOCKER_TAG_LATEST:-1}" != "0" ]]; then
   echo "=> 完成: $API_LATEST"
   echo "=> 完成: $WEB_LATEST"
+  echo "=> 完成: $ADMIN_LATEST"
 fi
 
 if [[ "${DOCKER_PUSH:-1}" != "0" ]]; then
@@ -111,11 +120,15 @@ if [[ "${DOCKER_PUSH:-1}" != "0" ]]; then
   command docker push "$API_IMAGE"
   echo "=> 推送 $WEB_IMAGE"
   command docker push "$WEB_IMAGE"
+  echo "=> 推送 $ADMIN_IMAGE"
+  command docker push "$ADMIN_IMAGE"
   if [[ "${DOCKER_TAG_LATEST:-1}" != "0" ]]; then
     echo "=> 推送 $API_LATEST"
     command docker push "$API_LATEST"
     echo "=> 推送 $WEB_LATEST"
     command docker push "$WEB_LATEST"
+    echo "=> 推送 $ADMIN_LATEST"
+    command docker push "$ADMIN_LATEST"
   fi
   echo "=> 推送完成"
 fi
