@@ -89,35 +89,37 @@ export const IssueGanttBlock = observer(function IssueGanttBlock(props: Props) {
           <button
             type="button"
             id={`issue-${issueId}`}
-            className="space-between relative flex h-full w-full cursor-pointer items-stretch overflow-hidden rounded-sm border-0 p-0 text-left font-[inherit]"
+            className="relative flex h-full w-full cursor-pointer flex-col items-stretch overflow-hidden rounded-sm border-0 p-0 text-left font-[inherit]"
             style={blockStyle}
             onClick={handleIssuePeekOverview}
           >
-            <div className="absolute top-0 left-0 h-full w-full bg-surface-1/50" />
             {projectAccentColor && (
               <div
                 aria-hidden
-                className="relative z-[1] h-full w-[3px] shrink-0 rounded-l-sm"
+                className="h-[3px] w-full shrink-0 rounded-t-sm"
                 style={{ backgroundColor: projectAccentColor }}
               />
             )}
-            <div
-              className="relative sticky z-[1] flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden px-2.5 py-1 text-13"
-              style={{ left: `${SIDEBAR_WIDTH}px` }}
-            >
-              {shouldRenderIssueKey && issueDetails && (
-                <span className="shrink-0 text-caption-sm-regular font-medium whitespace-nowrap text-secondary">
-                  {projectIdentifier}-{issueDetails.sequence_id}
-                </span>
-              )}
-              <span className="min-w-0 flex-1 truncate text-primary">{issueDetails?.name}</span>
-              {isEpic && (
-                <IssueStats
-                  issueId={issueId}
-                  className="sticky mx-2 w-auto flex-shrink-0 justify-end truncate overflow-hidden font-medium text-primary"
-                  showProgressText={duration >= 2}
-                />
-              )}
+            <div className="relative flex min-h-0 min-w-0 flex-1 items-stretch overflow-hidden">
+              <div className="absolute top-0 left-0 h-full w-full bg-surface-1/50" />
+              <div
+                className="relative sticky z-[1] flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden px-2.5 py-1 text-13"
+                style={{ left: `${SIDEBAR_WIDTH}px` }}
+              >
+                {shouldRenderIssueKey && issueDetails && (
+                  <span className="shrink-0 text-caption-sm-regular font-medium whitespace-nowrap text-secondary">
+                    {projectIdentifier}-{issueDetails.sequence_id}
+                  </span>
+                )}
+                <span className="min-w-0 flex-1 truncate text-primary">{issueDetails?.name}</span>
+                {isEpic && (
+                  <IssueStats
+                    issueId={issueId}
+                    className="sticky mx-2 w-auto flex-shrink-0 justify-end truncate overflow-hidden font-medium text-primary"
+                    showProgressText={duration >= 2}
+                  />
+                )}
+              </div>
             </div>
           </button>
         }
