@@ -312,6 +312,7 @@ export const getComputedDisplayProperties = (
   modules: displayProperties?.modules ?? true,
   cycle: displayProperties?.cycle ?? true,
   issue_type: displayProperties?.issue_type ?? true,
+  project: displayProperties?.project ?? false,
 });
 
 export const generateWorkItemLink = ({

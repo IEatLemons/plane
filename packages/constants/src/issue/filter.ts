@@ -137,6 +137,27 @@ export const ISSUE_DISPLAY_FILTERS_BY_PAGE: TIssueFiltersToDisplayByPageType = {
           values: ["show_empty_groups"],
         },
       },
+      calendar: {
+        display_properties: ["key", "issue_type"],
+        display_filters: {
+          type: ["active", "backlog"],
+        },
+        extra_options: {
+          access: true,
+          values: ["sub_issue"],
+        },
+      },
+      gantt_chart: {
+        display_properties: ["key", "issue_type"],
+        display_filters: {
+          order_by: ["sort_order", "-created_at", "-updated_at", "start_date", "-priority"],
+          type: ["active", "backlog"],
+        },
+        extra_options: {
+          access: true,
+          values: ["sub_issue"],
+        },
+      },
     },
   },
   archived_issues: {
@@ -194,11 +215,47 @@ export const ISSUE_DISPLAY_FILTERS_BY_PAGE: TIssueFiltersToDisplayByPageType = {
       list: {
         display_properties: ISSUE_DISPLAY_PROPERTIES_KEYS,
         display_filters: {
+          group_by: ["state", "priority", "cycle", "module", "labels", "assignees", "created_by", "project", null],
+          order_by: ["sort_order", "-created_at", "-updated_at", "start_date", "-priority", "target_date"],
           type: ["active", "backlog"],
         },
         extra_options: {
-          access: false,
-          values: [],
+          access: true,
+          values: ["show_empty_groups", "sub_issue"],
+        },
+      },
+      kanban: {
+        display_properties: ISSUE_DISPLAY_PROPERTIES_KEYS,
+        display_filters: {
+          group_by: ["state", "priority", "cycle", "module", "labels", "assignees", "created_by", "project"],
+          sub_group_by: ["state", "priority", "cycle", "module", "labels", "assignees", "created_by", "project", null],
+          order_by: ["sort_order", "-created_at", "-updated_at", "start_date", "-priority", "target_date"],
+          type: ["active", "backlog"],
+        },
+        extra_options: {
+          access: true,
+          values: ["show_empty_groups", "sub_issue"],
+        },
+      },
+      calendar: {
+        display_properties: ["key", "issue_type"],
+        display_filters: {
+          type: ["active", "backlog"],
+        },
+        extra_options: {
+          access: true,
+          values: ["sub_issue"],
+        },
+      },
+      gantt_chart: {
+        display_properties: ["key", "issue_type"],
+        display_filters: {
+          order_by: ["sort_order", "-created_at", "-updated_at", "start_date", "-priority"],
+          type: ["active", "backlog"],
+        },
+        extra_options: {
+          access: true,
+          values: ["sub_issue"],
         },
       },
     },
@@ -353,9 +410,9 @@ export const filterActivityOnSelectedFilters = (
   activity: TIssueActivityComment[],
   filters: TActivityFilters[]
 ): TIssueActivityComment[] =>
-  activity.filter((activity) => {
-    if (activity.activity_type === EActivityFilterType.DEFAULT) return true;
-    return filters.includes(activity.activity_type as TActivityFilters);
+  activity.filter((item) => {
+    if (item.activity_type === EActivityFilterType.DEFAULT) return true;
+    return filters.includes(item.activity_type as TActivityFilters);
   });
 
 export const ENABLE_ISSUE_DEPENDENCIES = false;

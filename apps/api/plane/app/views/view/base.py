@@ -23,7 +23,7 @@ from rest_framework import status
 from rest_framework.response import Response
 
 # Module imports
-from plane.app.permissions import allow_permission, ROLE
+from plane.app.permissions import ROLE, allow_permission
 from plane.app.serializers import IssueViewSerializer, ViewIssueListSerializer
 from plane.db.models import (
     Issue,
@@ -226,10 +226,15 @@ class WorkspaceViewIssuesViewSet(BaseViewSet):
         filters = issue_filters(request.query_params, "GET")
         issue_queryset = issue_queryset.filter(**filters)
 
-        # Get common project permission filters
-        permission_filters = self._get_project_permission_filters()
-        # Apply project permission filters to the issue queryset
-        issue_queryset = issue_queryset.filter(permission_filters)
+        is_workspace_admin = WorkspaceMember.objects.filter(
+            workspace__slug=slug, member=request.user, role=ROLE.ADMIN.value, is_active=True
+        ).exists()
+
+        if is_workspace_admin:
+            issue_queryset = issue_queryset.filter(project__archived_at__isnull=True)
+        else:
+            permission_filters = self._get_project_permission_filters()
+            issue_queryset = issue_queryset.filter(permission_filters)
 
         # Base query for the counts
         total_issue_count_queryset = copy.deepcopy(issue_queryset)

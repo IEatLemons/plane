@@ -54,7 +54,9 @@ export type TIssueOrderByOptions =
   | "attachment_count"
   | "-attachment_count"
   | "sub_issues_count"
-  | "-sub_issues_count";
+  | "-sub_issues_count"
+  | "project__name"
+  | "-project__name";
 
 export type TIssueGroupingFilters = "active" | "backlog";
 
@@ -175,6 +177,8 @@ export interface IIssueDisplayProperties {
   modules?: boolean;
   cycle?: boolean;
   issue_type?: boolean;
+  /** Workspace-level spreadsheet: show originating project name */
+  project?: boolean;
 }
 
 export type TIssueKanbanFilters = {

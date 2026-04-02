@@ -19,7 +19,7 @@ import type {
   ICalendarWeek,
   TSupportedFilterForUpdate,
 } from "@plane/types";
-import { EIssuesStoreType, EIssueLayoutTypes } from "@plane/types";
+import { EIssueLayoutTypes } from "@plane/types";
 // ui
 import { Spinner } from "@plane/ui";
 import { renderFormattedPayloadDate, cn } from "@plane/utils";
@@ -28,14 +28,11 @@ import { MONTHS_LIST } from "@/constants/calendar";
 // helpers
 // hooks
 import { useIssues } from "@/hooks/store/use-issues";
+import { useIssueStoreType } from "@/hooks/use-issue-layout-store";
 import useSize from "@/hooks/use-window-size";
 // store
-import type { IProjectEpicsFilter } from "@/plane-web/store/issue/epic";
-import type { ICycleIssuesFilter } from "@/store/issue/cycle";
 import type { ICalendarStore } from "@/store/issue/issue_calendar_view.store";
-import type { IModuleIssuesFilter } from "@/store/issue/module";
-import type { IProjectIssuesFilter } from "@/store/issue/project";
-import type { IProjectViewIssuesFilter } from "@/store/issue/project-views";
+import type { TCalendarIssuesFilterStore } from "./calendar-filter-store.types";
 // local imports
 import { IssueLayoutHOC } from "../issue-layout-HOC";
 import type { TRenderQuickActions } from "../list/list-view-types";
@@ -45,7 +42,7 @@ import { CalendarWeekDays } from "./week-days";
 import { CalendarWeekHeader } from "./week-header";
 
 type Props = {
-  issuesFilterStore: IProjectIssuesFilter | IModuleIssuesFilter | ICycleIssuesFilter | IProjectViewIssuesFilter;
+  issuesFilterStore: TCalendarIssuesFilterStore;
   issues: TIssueMap | undefined;
   groupedIssueIds: TGroupedIssues;
   layout: "month" | "week" | undefined;
@@ -98,9 +95,10 @@ export const CalendarChart = observer(function CalendarChart(props: Props) {
   //refs
   const scrollableContainerRef = useRef<HTMLDivElement | null>(null);
   // store hooks
+  const calendarIssueStoreType = useIssueStoreType();
   const {
     issues: { viewFlags },
-  } = useIssues(EIssuesStoreType.PROJECT);
+  } = useIssues(calendarIssueStoreType);
 
   const [windowWidth] = useSize();
 
@@ -123,7 +121,7 @@ export const CalendarChart = observer(function CalendarChart(props: Props) {
         element,
       })
     );
-  }, [scrollableContainerRef?.current]);
+  }, []);
 
   if (!calendarPayload || !formattedDatePayload)
     return (
@@ -155,13 +153,13 @@ export const CalendarChart = observer(function CalendarChart(props: Props) {
               {layout === "month" && (
                 <div className="grid h-full w-full grid-cols-1 divide-y-[0.5px] divide-subtle-1">
                   {allWeeksOfActiveMonth &&
-                    Object.values(allWeeksOfActiveMonth).map((week: ICalendarWeek, weekIndex) => (
+                    Object.values(allWeeksOfActiveMonth).map((week: ICalendarWeek) => (
                       <CalendarWeekDays
                         selectedDate={selectedDate}
                         setSelectedDate={setSelectedDate}
                         handleDragAndDrop={handleDragAndDrop}
                         issuesFilterStore={issuesFilterStore}
-                        key={weekIndex}
+                        key={Object.keys(week).toSorted().join("-")}
                         week={week}
                         issues={issues}
                         groupedIssueIds={groupedIssueIds}

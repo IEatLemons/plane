@@ -56,23 +56,42 @@ const LOCAL_DEFAULTS: Record<RuntimeEnvKey, string> = {
   VITE_GITHUB_FORK_URL: "",
 };
 
+/** Vite injects `import.meta.env`; plain Node (e.g. apps/live) has neither — use `process.env` from `--env-file`. */
+function buildTimeEnv(key: RuntimeEnvKey): string | undefined {
+  const meta =
+    typeof import.meta !== "undefined" &&
+    import.meta !== null &&
+    "env" in import.meta &&
+    typeof (import.meta as ImportMeta & { env?: unknown }).env === "object"
+      ? (import.meta as ImportMeta & { env: Record<string, string | boolean | undefined> }).env
+      : undefined;
+  const fromMeta = meta?.[key];
+  if (fromMeta !== undefined && fromMeta !== null) {
+    return String(fromMeta);
+  }
+  if (typeof process !== "undefined" && process.env[key] !== undefined) {
+    return process.env[key];
+  }
+  return undefined;
+}
+
 const viteBuildEnv: Record<RuntimeEnvKey, string | undefined> = {
-  VITE_API_BASE_URL: import.meta.env.VITE_API_BASE_URL,
-  VITE_API_BASE_PATH: import.meta.env.VITE_API_BASE_PATH,
-  VITE_ADMIN_BASE_URL: import.meta.env.VITE_ADMIN_BASE_URL,
-  VITE_ADMIN_BASE_PATH: import.meta.env.VITE_ADMIN_BASE_PATH,
-  VITE_SPACE_BASE_URL: import.meta.env.VITE_SPACE_BASE_URL,
-  VITE_SPACE_BASE_PATH: import.meta.env.VITE_SPACE_BASE_PATH,
-  VITE_LIVE_BASE_URL: import.meta.env.VITE_LIVE_BASE_URL,
-  VITE_LIVE_BASE_PATH: import.meta.env.VITE_LIVE_BASE_PATH,
-  VITE_WEB_BASE_URL: import.meta.env.VITE_WEB_BASE_URL,
-  VITE_WEB_BASE_PATH: import.meta.env.VITE_WEB_BASE_PATH,
-  VITE_WEBSITE_URL: import.meta.env.VITE_WEBSITE_URL,
-  VITE_SUPPORT_EMAIL: import.meta.env.VITE_SUPPORT_EMAIL,
-  VITE_ENABLE_SESSION_RECORDER: import.meta.env.VITE_ENABLE_SESSION_RECORDER,
-  VITE_SESSION_RECORDER_KEY: import.meta.env.VITE_SESSION_RECORDER_KEY,
-  VITE_GITHUB_STAR_URL: import.meta.env.VITE_GITHUB_STAR_URL,
-  VITE_GITHUB_FORK_URL: import.meta.env.VITE_GITHUB_FORK_URL,
+  VITE_API_BASE_URL: buildTimeEnv("VITE_API_BASE_URL"),
+  VITE_API_BASE_PATH: buildTimeEnv("VITE_API_BASE_PATH"),
+  VITE_ADMIN_BASE_URL: buildTimeEnv("VITE_ADMIN_BASE_URL"),
+  VITE_ADMIN_BASE_PATH: buildTimeEnv("VITE_ADMIN_BASE_PATH"),
+  VITE_SPACE_BASE_URL: buildTimeEnv("VITE_SPACE_BASE_URL"),
+  VITE_SPACE_BASE_PATH: buildTimeEnv("VITE_SPACE_BASE_PATH"),
+  VITE_LIVE_BASE_URL: buildTimeEnv("VITE_LIVE_BASE_URL"),
+  VITE_LIVE_BASE_PATH: buildTimeEnv("VITE_LIVE_BASE_PATH"),
+  VITE_WEB_BASE_URL: buildTimeEnv("VITE_WEB_BASE_URL"),
+  VITE_WEB_BASE_PATH: buildTimeEnv("VITE_WEB_BASE_PATH"),
+  VITE_WEBSITE_URL: buildTimeEnv("VITE_WEBSITE_URL"),
+  VITE_SUPPORT_EMAIL: buildTimeEnv("VITE_SUPPORT_EMAIL"),
+  VITE_ENABLE_SESSION_RECORDER: buildTimeEnv("VITE_ENABLE_SESSION_RECORDER"),
+  VITE_SESSION_RECORDER_KEY: buildTimeEnv("VITE_SESSION_RECORDER_KEY"),
+  VITE_GITHUB_STAR_URL: buildTimeEnv("VITE_GITHUB_STAR_URL"),
+  VITE_GITHUB_FORK_URL: buildTimeEnv("VITE_GITHUB_FORK_URL"),
 };
 
 function readEnv(key: RuntimeEnvKey): string {

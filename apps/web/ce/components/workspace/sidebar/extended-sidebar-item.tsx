@@ -14,7 +14,7 @@ import { useParams, usePathname } from "next/navigation";
 import { Pin, PinOff } from "lucide-react";
 // plane imports
 import type { IWorkspaceSidebarNavigationItem } from "@plane/constants";
-import { EUserPermissionsLevel } from "@plane/constants";
+import { EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
 import { Tooltip } from "@plane/propel/tooltip";
 import { DragHandle, DropIndicator } from "@plane/ui";
@@ -88,13 +88,13 @@ export const ExtendedSidebarItem = observer(function ExtendedSidebarItem(props: 
         element,
         canDrop: ({ source }) =>
           !disableDrop && source?.data?.id !== item.key && source?.data?.dragInstanceId === "NAVIGATION",
-        getData: ({ input, element }) => {
-          const data = { id: item.key };
+        getData: ({ input, element: dropTargetElement }) => {
+          const dropData = { id: item.key };
 
           // attach instruction for last in list
-          return attachInstruction(data, {
+          return attachInstruction(dropData, {
             input,
-            element,
+            element: dropTargetElement,
             currentLevel: 0,
             indentPerLevel: 0,
             mode: isLastChild ? "last-in-group" : "standard",
@@ -134,10 +134,16 @@ export const ExtendedSidebarItem = observer(function ExtendedSidebarItem(props: 
     );
   }, [isLastChild, handleOnNavigationItemDrop, disableDrag, disableDrop, item.key]);
 
-  const itemHref =
-    item.key === "your_work"
-      ? `/${workspaceSlug.toString()}${item.href}${data?.id}`
-      : `/${workspaceSlug.toString()}${item.href}`;
+  const slug = workspaceSlug.toString();
+  const isWorkspaceAdmin = allowPermissions([EUserPermissions.ADMIN], EUserPermissionsLevel.WORKSPACE, slug);
+  const navHref =
+    item.key === "views"
+      ? isWorkspaceAdmin
+        ? "/workspace-views/all-issues/"
+        : "/workspace-views/assigned/"
+      : item.href;
+
+  const itemHref = item.key === "your_work" ? `/${slug}${navHref}${data?.id}` : `/${slug}${navHref}`;
   const isActive = itemHref === pathname;
 
   const pinNavigationItem = (key: string) => {

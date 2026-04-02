@@ -33,6 +33,7 @@ export enum EIssueGroupByToServerOptions {
   "cycle" = "cycle_id",
   "module" = "issue_module__module_id",
   "target_date" = "target_date",
+  // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values -- same server field as team_project
   "project" = "project_id",
   "created_by" = "created_by",
   // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
@@ -348,6 +349,14 @@ export const SPREADSHEET_PROPERTY_DETAILS: {
     descendingOrderKey: "sub_issues_count",
     descendingOrderTitle: "Least",
     icon: "LayersIcon",
+  },
+  project: {
+    i18n_title: "common.project",
+    ascendingOrderKey: "project__name",
+    ascendingOrderTitle: "A",
+    descendingOrderKey: "-project__name",
+    descendingOrderTitle: "Z",
+    icon: "Briefcase",
   },
 };
 

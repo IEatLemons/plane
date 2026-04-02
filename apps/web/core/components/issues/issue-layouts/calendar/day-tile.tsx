@@ -19,17 +19,12 @@ import { highlightIssueOnDrop } from "@/components/issues/issue-layouts/utils";
 // helpers
 import { MONTHS_LIST } from "@/constants/calendar";
 // helpers
-// types
-import type { IProjectEpicsFilter } from "@/plane-web/store/issue/epic";
-import type { ICycleIssuesFilter } from "@/store/issue/cycle";
-import type { IModuleIssuesFilter } from "@/store/issue/module";
-import type { IProjectIssuesFilter } from "@/store/issue/project";
-import type { IProjectViewIssuesFilter } from "@/store/issue/project-views";
+import type { TCalendarIssuesFilterStore } from "./calendar-filter-store.types";
 import type { TRenderQuickActions } from "../list/list-view-types";
 import { CalendarIssueBlocks } from "./issue-blocks";
 
 type Props = {
-  issuesFilterStore: IProjectIssuesFilter | IModuleIssuesFilter | ICycleIssuesFilter | IProjectViewIssuesFilter;
+  issuesFilterStore: TCalendarIssuesFilterStore;
   date: ICalendarDate;
   issues: TIssueMap | undefined;
   groupedIssueIds: TGroupedIssues;
@@ -130,6 +125,7 @@ export const CalendarDayTile = observer(function CalendarDayTile(props: Props) {
         },
       })
     );
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- pragmatic-dnd binding; issues/handleDragAndDrop change with parent
   }, [dayTileRef?.current, formattedDatePayload]);
 
   if (!formattedDatePayload) return null;
@@ -197,10 +193,11 @@ export const CalendarDayTile = observer(function CalendarDayTile(props: Props) {
         </div>
 
         {/* Mobile view content */}
-        <div
+        <button
+          type="button"
           onClick={() => setSelectedDate(date.date)}
           className={cn(
-            "mx-auto flex h-full w-full cursor-pointer flex-col items-center justify-start py-2.5 text-13 font-medium opacity-80 md:hidden",
+            "mx-auto flex h-full w-full cursor-pointer flex-col items-center justify-start border-0 bg-transparent py-2.5 text-13 font-medium opacity-80 md:hidden",
             {
               "bg-layer-2": !isWeekend,
             }
@@ -214,7 +211,7 @@ export const CalendarDayTile = observer(function CalendarDayTile(props: Props) {
           >
             {date.date.getDate()}
           </div>
-        </div>
+        </button>
       </div>
     </>
   );

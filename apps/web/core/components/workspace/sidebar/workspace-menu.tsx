@@ -4,14 +4,16 @@
  * See the LICENSE file for details.
  */
 
-import React from "react";
+import React, { useMemo } from "react";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 import { Disclosure, Transition } from "@headlessui/react";
 // plane imports
+import { EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
 import { AnalyticsIcon, CycleIcon, ProjectIcon, ViewsIcon } from "@plane/propel/icons";
 import { EUserWorkspaceRoles } from "@plane/types";
 // hooks
+import { useUserPermissions } from "@/hooks/store/user";
 import useLocalStorage from "@/hooks/use-local-storage";
 // local imports
 import { SidebarWorkspaceMenuHeader } from "./workspace-menu-header";
@@ -20,41 +22,47 @@ import { SidebarWorkspaceMenuItem } from "./workspace-menu-item";
 export const SidebarWorkspaceMenu = observer(function SidebarWorkspaceMenu() {
   // router params
   const { workspaceSlug } = useParams();
+  const { allowPermissions } = useUserPermissions();
   // local storage
   const { setValue: toggleWorkspaceMenu, storedValue } = useLocalStorage<boolean>("is_workspace_menu_open", true);
   // derived values
   const isWorkspaceMenuOpen = !!storedValue;
 
-  const SIDEBAR_WORKSPACE_MENU_ITEMS = [
-    {
-      key: "projects",
-      labelTranslationKey: "sidebar.projects",
-      href: `/${workspaceSlug}/projects/`,
-      access: [EUserWorkspaceRoles.ADMIN, EUserWorkspaceRoles.MEMBER, EUserWorkspaceRoles.GUEST],
-      Icon: ProjectIcon,
-    },
-    {
-      key: "views",
-      labelTranslationKey: "sidebar.views",
-      href: `/${workspaceSlug}/workspace-views/all-issues/`,
-      access: [EUserWorkspaceRoles.ADMIN, EUserWorkspaceRoles.MEMBER, EUserWorkspaceRoles.GUEST],
-      Icon: ViewsIcon,
-    },
-    {
-      key: "active-cycles",
-      labelTranslationKey: "sidebar.cycles",
-      href: `/${workspaceSlug}/active-cycles/`,
-      access: [EUserWorkspaceRoles.ADMIN, EUserWorkspaceRoles.MEMBER],
-      Icon: CycleIcon,
-    },
-    {
-      key: "analytics",
-      labelTranslationKey: "sidebar.analytics",
-      href: `/${workspaceSlug}/analytics/`,
-      access: [EUserWorkspaceRoles.ADMIN, EUserWorkspaceRoles.MEMBER],
-      Icon: AnalyticsIcon,
-    },
-  ];
+  const SIDEBAR_WORKSPACE_MENU_ITEMS = useMemo(() => {
+    const slug = workspaceSlug?.toString() ?? "";
+    const isWorkspaceAdmin = allowPermissions([EUserPermissions.ADMIN], EUserPermissionsLevel.WORKSPACE, slug);
+    const viewsSegment = isWorkspaceAdmin ? "all-issues" : "assigned";
+    return [
+      {
+        key: "projects",
+        labelTranslationKey: "sidebar.projects",
+        href: `/${workspaceSlug}/projects/`,
+        access: [EUserWorkspaceRoles.ADMIN, EUserWorkspaceRoles.MEMBER, EUserWorkspaceRoles.GUEST],
+        Icon: ProjectIcon,
+      },
+      {
+        key: "views",
+        labelTranslationKey: "sidebar.views",
+        href: `/${workspaceSlug}/workspace-views/${viewsSegment}/`,
+        access: [EUserWorkspaceRoles.ADMIN, EUserWorkspaceRoles.MEMBER, EUserWorkspaceRoles.GUEST],
+        Icon: ViewsIcon,
+      },
+      {
+        key: "active-cycles",
+        labelTranslationKey: "sidebar.cycles",
+        href: `/${workspaceSlug}/active-cycles/`,
+        access: [EUserWorkspaceRoles.ADMIN, EUserWorkspaceRoles.MEMBER],
+        Icon: CycleIcon,
+      },
+      {
+        key: "analytics",
+        labelTranslationKey: "sidebar.analytics",
+        href: `/${workspaceSlug}/analytics/`,
+        access: [EUserWorkspaceRoles.ADMIN, EUserWorkspaceRoles.MEMBER],
+        Icon: AnalyticsIcon,
+      },
+    ];
+  }, [workspaceSlug, allowPermissions]);
 
   return (
     <Disclosure as="div" defaultOpen>

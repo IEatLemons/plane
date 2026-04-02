@@ -4,6 +4,8 @@
  * See the LICENSE file for details.
  */
 
+/* oxlint-disable no-shadow, no-unused-expressions -- large store: lodash/mobx names vs. locals; short-circuit side effects */
+
 import { isEqual, concat, get, indexOf, isEmpty, orderBy, pull, set, uniq, update, clone } from "lodash-es";
 import { action, computed, makeObservable, observable, runInAction } from "mobx";
 import { computedFn } from "mobx-utils";
@@ -172,6 +174,8 @@ const ISSUE_ORDERBY_KEY: Record<TIssueOrderByOptions, keyof TIssue> = {
   "-attachment_count": "attachment_count",
   sub_issues_count: "sub_issues_count",
   "-sub_issues_count": "sub_issues_count",
+  project__name: "project_id",
+  "-project__name": "project_id",
 };
 
 export abstract class BaseIssuesStore implements IBaseIssuesStore {

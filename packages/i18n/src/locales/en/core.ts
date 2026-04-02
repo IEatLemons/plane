@@ -145,7 +145,7 @@ export default {
       email_sent: "We sent the reset link to your email address",
       send_reset_link: "Send reset link",
       errors: {
-        smtp_not_enabled: "We see that your god hasn't enabled SMTP, we will not be able to send a password reset link",
+        smtp_not_enabled: "Your administrator hasn't enabled SMTP, so we can't send a password reset link",
       },
       toast: {
         success: {

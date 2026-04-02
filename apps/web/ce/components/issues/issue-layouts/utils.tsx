@@ -5,7 +5,7 @@
  */
 
 import type { FC } from "react";
-import { CalendarDays, LayersIcon, Paperclip } from "lucide-react";
+import { Briefcase, CalendarDays, LayersIcon, Paperclip } from "lucide-react";
 // types
 import { ISSUE_GROUP_BY_OPTIONS } from "@plane/constants";
 import type { ISvgIcons } from "@plane/propel/icons";
@@ -44,6 +44,7 @@ import {
   SpreadsheetStateColumn,
   SpreadsheetSubIssueColumn,
   SpreadsheetUpdatedOnColumn,
+  SpreadsheetProjectColumn,
 } from "@/components/issues/issue-layouts/spreadsheet/columns";
 // store
 import { store } from "@/lib/store-context";
@@ -79,6 +80,7 @@ export const getScopeMemberIds = ({ isWorkspaceLevel, projectId }: TGetColumns):
 export const getTeamProjectColumns = (): IGroupByColumn[] | undefined => undefined;
 
 export const SpreadSheetPropertyIconMap: Record<string, FC<ISvgIcons>> = {
+  Briefcase: Briefcase,
   MembersPropertyIcon: MembersPropertyIcon,
   CalenderDays: CalendarDays,
   DueDatePropertyIcon: DueDatePropertyIcon,
@@ -95,6 +97,7 @@ export const SpreadSheetPropertyIconMap: Record<string, FC<ISvgIcons>> = {
 };
 
 export const SPREADSHEET_COLUMNS: { [key in keyof IIssueDisplayProperties]: TSpreadsheetColumn } = {
+  project: SpreadsheetProjectColumn,
   assignee: SpreadsheetAssigneeColumn,
   created_on: SpreadsheetCreatedOnColumn,
   due_date: SpreadsheetDueDateColumn,

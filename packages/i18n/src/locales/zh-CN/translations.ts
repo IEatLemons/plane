@@ -2628,4 +2628,10 @@ export default {
     close_button: "关闭导航面板",
     outline_floating_button: "打开大纲",
   },
+  workspace_quick_filters: {
+    label: "快捷筛选",
+    due_today: "今日截止",
+    due_next_7_days: "未来 7 天",
+    assigned_to_me: "指派给我",
+  },
 } as const;

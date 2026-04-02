@@ -13,16 +13,16 @@ import { GLOBAL_VIEW_TRACKER_ELEMENTS, ISSUE_DISPLAY_FILTERS_BY_PAGE } from "@pl
 import { EmptyStateDetailed } from "@plane/propel/empty-state";
 import type { EIssueLayoutTypes } from "@plane/types";
 import { EIssuesStoreType, STATIC_VIEW_TYPES } from "@plane/types";
-// assets
-import emptyView from "@/app/assets/empty-state/view.svg?url";
 // components
 import { IssuePeekOverview } from "@/components/issues/peek-overview";
 import { WorkspaceActiveLayout } from "@/components/views/helper";
 import { WorkspaceLevelWorkItemFiltersHOC } from "@/components/work-item-filters/filters-hoc/workspace-level";
 import { WorkItemFiltersRow } from "@/components/work-item-filters/filters-row";
+import { WorkspaceQuickFilterChips } from "@/components/work-item-filters/workspace-quick-filter-chips";
 // hooks
 import { useGlobalView } from "@/hooks/store/use-global-view";
 import { useIssues } from "@/hooks/store/use-issues";
+import { useUser } from "@/hooks/store/user/user-user";
 import { useAppRouter } from "@/hooks/use-app-router";
 import { IssuesStoreContext } from "@/hooks/use-issue-layout-store";
 import { useWorkspaceIssueProperties } from "@/hooks/use-workspace-issue-properties";
@@ -44,10 +44,11 @@ export const AllIssueLayoutRoot = observer(function AllIssueLayoutRoot(props: Pr
   const searchParams = useSearchParams();
   // store hooks
   const {
-    issuesFilter: { filters, fetchFilters, updateFilterExpression },
+    issuesFilter: { filters, fetchFilters, updateFilterExpression, updateFilters },
     issues: { clear, groupedIssueIds, fetchIssues, fetchNextIssues },
   } = useIssues(EIssuesStoreType.GLOBAL);
   const { fetchAllGlobalViews, getViewDetailsById } = useGlobalView();
+  const { data: currentUser } = useUser();
   // Derived values
   const viewDetails = globalViewId ? getViewDetailsById(globalViewId) : undefined;
   const workItemFilters = globalViewId ? filters?.[globalViewId] : undefined;
@@ -150,12 +151,21 @@ export const AllIssueLayoutRoot = observer(function AllIssueLayoutRoot(props: Pr
           <div className="h-full overflow-hidden bg-surface-1">
             <div className="flex h-full w-full flex-col border-b border-strong">
               {globalWorkItemsFilter && (
-                <WorkItemFiltersRow
-                  filter={globalWorkItemsFilter}
-                  trackerElements={{
-                    saveView: GLOBAL_VIEW_TRACKER_ELEMENTS.HEADER_SAVE_VIEW_BUTTON,
-                  }}
-                />
+                <>
+                  <WorkspaceQuickFilterChips
+                    filter={globalWorkItemsFilter}
+                    currentUserId={currentUser?.id}
+                    workspaceSlug={workspaceSlug}
+                    globalViewId={globalViewId}
+                    updateFilters={updateFilters}
+                  />
+                  <WorkItemFiltersRow
+                    filter={globalWorkItemsFilter}
+                    trackerElements={{
+                      saveView: GLOBAL_VIEW_TRACKER_ELEMENTS.HEADER_SAVE_VIEW_BUTTON,
+                    }}
+                  />
+                </>
               )}
               <WorkspaceActiveLayout
                 activeLayout={activeLayout}

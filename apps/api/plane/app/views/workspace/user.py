@@ -29,7 +29,7 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.response import Response
 
-from plane.app.permissions import WorkspaceEntityPermission, WorkspaceViewerPermission
+from plane.app.permissions import ROLE, WorkspaceEntityPermission, WorkspaceViewerPermission
 
 # Module imports
 from plane.app.serializers import (
@@ -136,15 +136,28 @@ class WorkspaceUserProfileIssuesEndpoint(BaseAPIView):
         filters = issue_filters(request.query_params, "GET")
 
         order_by_param = request.GET.get("order_by", "-created_at")
-        issue_queryset = Issue.issue_objects.filter(
-            id__in=Issue.issue_objects.filter(
-                Q(assignees__in=[user_id]) | Q(created_by_id=user_id) | Q(issue_subscribers__subscriber_id=user_id),
-                workspace__slug=slug,
-            ).values_list("id", flat=True),
+        profile_issue_ids = Issue.issue_objects.filter(
+            Q(assignees__in=[user_id]) | Q(created_by_id=user_id) | Q(issue_subscribers__subscriber_id=user_id),
             workspace__slug=slug,
-            project__project_projectmember__member=request.user,
-            project__project_projectmember__is_active=True,
-        )
+        ).values_list("id", flat=True)
+
+        is_workspace_admin = WorkspaceMember.objects.filter(
+            workspace__slug=slug, member=request.user, role=ROLE.ADMIN.value, is_active=True
+        ).exists()
+
+        if is_workspace_admin:
+            issue_queryset = Issue.issue_objects.filter(
+                id__in=profile_issue_ids,
+                workspace__slug=slug,
+                project__archived_at__isnull=True,
+            )
+        else:
+            issue_queryset = Issue.issue_objects.filter(
+                id__in=profile_issue_ids,
+                workspace__slug=slug,
+                project__project_projectmember__member=request.user,
+                project__project_projectmember__is_active=True,
+            )
 
         # Apply filtering from filterset
         issue_queryset = self.filter_queryset(issue_queryset)

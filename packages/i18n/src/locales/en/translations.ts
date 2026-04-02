@@ -2754,4 +2754,10 @@ export default {
   enter_number_of_projects: "Enter number of projects",
   pin: "Pin",
   unpin: "Unpin",
+  workspace_quick_filters: {
+    label: "Quick filters",
+    due_today: "Due today",
+    due_next_7_days: "Next 7 days",
+    assigned_to_me: "Assigned to me",
+  },
 } as const;

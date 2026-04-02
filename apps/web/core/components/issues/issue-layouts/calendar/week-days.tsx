@@ -10,17 +10,12 @@ import type { TGroupedIssues, TIssue, TIssueMap, TPaginationData, ICalendarDate,
 import { cn, getOrderedDays, renderFormattedPayloadDate } from "@plane/utils";
 // hooks
 import { useUserProfile } from "@/hooks/store/user";
-// types
-import type { IProjectEpicsFilter } from "@/plane-web/store/issue/epic";
-import type { ICycleIssuesFilter } from "@/store/issue/cycle";
-import type { IModuleIssuesFilter } from "@/store/issue/module";
-import type { IProjectIssuesFilter } from "@/store/issue/project";
-import type { IProjectViewIssuesFilter } from "@/store/issue/project-views";
+import type { TCalendarIssuesFilterStore } from "./calendar-filter-store.types";
 import type { TRenderQuickActions } from "../list/list-view-types";
 import { CalendarDayTile } from "./day-tile";
 
 type Props = {
-  issuesFilterStore: IProjectIssuesFilter | IModuleIssuesFilter | ICycleIssuesFilter | IProjectViewIssuesFilter;
+  issuesFilterStore: TCalendarIssuesFilterStore;
   issues: TIssueMap | undefined;
   groupedIssueIds: TGroupedIssues;
   week: ICalendarWeek | undefined;

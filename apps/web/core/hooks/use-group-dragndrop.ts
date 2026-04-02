@@ -25,7 +25,8 @@ type DNDStoreType =
   | EIssuesStoreType.TEAM
   | EIssuesStoreType.TEAM_VIEW
   | EIssuesStoreType.EPIC
-  | EIssuesStoreType.TEAM_PROJECT_WORK_ITEMS;
+  | EIssuesStoreType.TEAM_PROJECT_WORK_ITEMS
+  | EIssuesStoreType.GLOBAL;
 
 export const useGroupIssuesDragNDrop = (
   storeType: DNDStoreType,
@@ -94,7 +95,7 @@ export const useGroupIssuesDragNDrop = (
       delete data[moduleKey];
     }
 
-    updateIssue && updateIssue(projectId, issueId, data).catch(() => setToast(errorToastProps));
+    if (updateIssue) void updateIssue(projectId, issueId, data).catch(() => setToast(errorToastProps));
   };
 
   const handleOnDrop = async (source: GroupDropLocation, destination: GroupDropLocation) => {

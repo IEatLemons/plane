@@ -100,7 +100,8 @@ export class WorkspaceIssuesFilter extends IssueFilterHelperStore implements IWo
     const userFilters = this.getIssueFilters(viewId);
     if (!userFilters) return undefined;
 
-    const filteredParams = handleIssueQueryParamsByLayout(EIssueLayoutTypes.SPREADSHEET, "my_issues");
+    const layout = userFilters.displayFilters?.layout ?? EIssueLayoutTypes.SPREADSHEET;
+    const filteredParams = handleIssueQueryParamsByLayout(layout, "my_issues");
     if (!filteredParams) return undefined;
 
     const filteredRouteParams: Partial<Record<TIssueParams, string | boolean>> = this.computedFilteredParams(
@@ -163,7 +164,10 @@ export class WorkspaceIssuesFilter extends IssueFilterHelperStore implements IWo
       layout: EIssueLayoutTypes.SPREADSHEET,
       order_by: "-created_at",
     });
-    displayProperties = this.computedDisplayProperties(_filters?.display_properties);
+    displayProperties = {
+      ...this.computedDisplayProperties(_filters?.display_properties),
+      project: _filters?.display_properties?.project ?? true,
+    };
     kanbanFilters = {
       group_by: _filters?.kanban_filters?.group_by || [],
       sub_group_by: _filters?.kanban_filters?.sub_group_by || [],
@@ -171,13 +175,16 @@ export class WorkspaceIssuesFilter extends IssueFilterHelperStore implements IWo
 
     // Get the view details if the view is not a static view
     if (STATIC_VIEW_TYPES.includes(viewId) === false) {
-      const _filters = await this.issueFilterService.getViewDetails(workspaceSlug, viewId);
-      richFilters = _filters?.rich_filters;
-      displayFilters = this.computedDisplayFilters(_filters?.display_filters, {
+      const viewDetails = await this.issueFilterService.getViewDetails(workspaceSlug, viewId);
+      richFilters = viewDetails?.rich_filters;
+      displayFilters = this.computedDisplayFilters(viewDetails?.display_filters, {
         layout: EIssueLayoutTypes.SPREADSHEET,
         order_by: "-created_at",
       });
-      displayProperties = this.computedDisplayProperties(_filters?.display_properties);
+      displayProperties = {
+        ...this.computedDisplayProperties(viewDetails?.display_properties),
+        project: viewDetails?.display_properties?.project ?? true,
+      };
     }
 
     // override existing order by if ordered by manual sort_order

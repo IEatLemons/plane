@@ -31,7 +31,9 @@ export type CalendarStoreType =
   | EIssuesStoreType.PROJECT_VIEW
   | EIssuesStoreType.TEAM
   | EIssuesStoreType.TEAM_VIEW
-  | EIssuesStoreType.EPIC;
+  | EIssuesStoreType.EPIC
+  | EIssuesStoreType.GLOBAL
+  | EIssuesStoreType.PROFILE;
 
 interface IBaseCalendarRoot {
   QuickActions: FC<IQuickActionProps>;
@@ -137,18 +139,20 @@ export const BaseCalendarRoot = observer(function BaseCalendarRoot(props: IBaseC
 
   const getPaginationData = useCallback(
     (groupId: string | undefined) => issues?.getPaginationData(groupId, undefined),
-    [issues?.getPaginationData]
+    [issues]
   );
 
   const getGroupIssueCount = useCallback(
     (groupId: string | undefined) => issues?.getGroupIssueCount(groupId, undefined, false),
-    [issues?.getGroupIssueCount]
+    [issues]
   );
 
   const canEditProperties = useCallback(
-    (projectId: string | undefined) => {
+    (issueProjectId: string | undefined) => {
       const isEditingAllowedBasedOnProject =
-        canEditPropertiesBasedOnProject && projectId ? canEditPropertiesBasedOnProject(projectId) : isEditingAllowed;
+        canEditPropertiesBasedOnProject && issueProjectId
+          ? canEditPropertiesBasedOnProject(issueProjectId)
+          : isEditingAllowed;
 
       return enableInlineEditing && isEditingAllowedBasedOnProject;
     },

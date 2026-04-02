@@ -37,7 +37,8 @@ type ListStoreType =
   | EIssuesStoreType.WORKSPACE_DRAFT
   | EIssuesStoreType.TEAM
   | EIssuesStoreType.TEAM_VIEW
-  | EIssuesStoreType.EPIC;
+  | EIssuesStoreType.EPIC
+  | EIssuesStoreType.GLOBAL;
 
 interface IBaseListRoot {
   QuickActions: FC<IQuickActionProps>;
@@ -99,9 +100,11 @@ export const BaseListRoot = observer(function BaseListRoot(props: IBaseListRoot)
   const { enableInlineEditing, enableQuickAdd, enableIssueCreation } = issues?.viewFlags || {};
 
   const canEditProperties = useCallback(
-    (projectId: string | undefined) => {
+    (issueProjectId: string | undefined) => {
       const isEditingAllowedBasedOnProject =
-        canEditPropertiesBasedOnProject && projectId ? canEditPropertiesBasedOnProject(projectId) : isEditingAllowed;
+        canEditPropertiesBasedOnProject && issueProjectId
+          ? canEditPropertiesBasedOnProject(issueProjectId)
+          : isEditingAllowed;
 
       return !!enableInlineEditing && isEditingAllowedBasedOnProject;
     },
@@ -116,10 +119,18 @@ export const BaseListRoot = observer(function BaseListRoot(props: IBaseListRoot)
         parentRef={parentRef}
         issue={issue}
         handleDelete={async () => removeIssue(issue.project_id, issue.id)}
-        handleUpdate={async (data) => updateIssue && updateIssue(issue.project_id, issue.id, data)}
-        handleRemoveFromView={async () => removeIssueFromView && removeIssueFromView(issue.project_id, issue.id)}
-        handleArchive={async () => archiveIssue && archiveIssue(issue.project_id, issue.id)}
-        handleRestore={async () => restoreIssue && restoreIssue(issue.project_id, issue.id)}
+        handleUpdate={async (data) => {
+          if (updateIssue) await updateIssue(issue.project_id, issue.id, data);
+        }}
+        handleRemoveFromView={async () => {
+          if (removeIssueFromView) await removeIssueFromView(issue.project_id, issue.id);
+        }}
+        handleArchive={async () => {
+          if (archiveIssue) await archiveIssue(issue.project_id, issue.id);
+        }}
+        handleRestore={async () => {
+          if (restoreIssue) await restoreIssue(issue.project_id, issue.id);
+        }}
         readOnly={!canEditProperties(issue.project_id ?? undefined) || isCompletedCycle}
       />
     ),
@@ -138,14 +149,14 @@ export const BaseListRoot = observer(function BaseListRoot(props: IBaseListRoot)
   const handleCollapsedGroups = useCallback(
     (value: string) => {
       if (workspaceSlug) {
-        let collapsedGroups = issuesFilter?.issueFilters?.kanbanFilters?.group_by || [];
-        if (collapsedGroups.includes(value)) {
-          collapsedGroups = collapsedGroups.filter((_value) => _value != value);
+        let nextGroupBy = issuesFilter?.issueFilters?.kanbanFilters?.group_by || [];
+        if (nextGroupBy.includes(value)) {
+          nextGroupBy = nextGroupBy.filter((_value) => _value != value);
         } else {
-          collapsedGroups.push(value);
+          nextGroupBy.push(value);
         }
         updateFilters(projectId?.toString() ?? "", EIssueFilterType.KANBAN_FILTERS, {
-          group_by: collapsedGroups,
+          group_by: nextGroupBy,
         } as TIssueKanbanFilters);
       }
     },

@@ -11,8 +11,8 @@ import { useParams } from "next/navigation";
 import { ALL_ISSUES, EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
 import { TOAST_TYPE, setToast } from "@plane/propel/toast";
-import type { EIssuesStoreType, IBlockUpdateData, TIssue } from "@plane/types";
-import { EIssueLayoutTypes, GANTT_TIMELINE_TYPE } from "@plane/types";
+import type { IBlockUpdateData, TIssue } from "@plane/types";
+import { EIssuesStoreType, EIssueLayoutTypes, GANTT_TIMELINE_TYPE } from "@plane/types";
 import { renderFormattedPayloadDate } from "@plane/utils";
 // components
 import { TimeLineTypeContext } from "@/components/gantt-chart/contexts";
@@ -42,16 +42,18 @@ export type GanttStoreType =
   | EIssuesStoreType.MODULE
   | EIssuesStoreType.CYCLE
   | EIssuesStoreType.PROJECT_VIEW
-  | EIssuesStoreType.EPIC;
+  | EIssuesStoreType.EPIC
+  | EIssuesStoreType.GLOBAL
+  | EIssuesStoreType.PROFILE;
 
-export const BaseGanttRoot = observer(function BaseGanttRoot(props: IBaseGanttRoot) {
-  const { viewId, isCompletedCycle = false, isEpic = false } = props;
+export const BaseGanttRoot = observer(function BaseGanttRoot(ganttRootProps: IBaseGanttRoot) {
+  const { viewId, isCompletedCycle = false, isEpic = false } = ganttRootProps;
   const { t } = useTranslation();
   // router
   const { workspaceSlug, projectId } = useParams();
 
   const storeType = useIssueStoreType() as GanttStoreType;
-  const { issues, issuesFilter } = useIssues(storeType);
+  const { issues, issuesFilter, issueMap } = useIssues(storeType);
   const { fetchIssues, fetchNextIssues, updateIssue, quickAddIssue } = useIssuesActions(storeType);
   const { initGantt } = useTimeLineChart(GANTT_TIMELINE_TYPE.ISSUE);
   // store hooks
@@ -70,7 +72,7 @@ export const BaseGanttRoot = observer(function BaseGanttRoot(props: IBaseGanttRo
 
   useEffect(() => {
     initGantt();
-  }, []);
+  }, [initGantt]);
 
   const issuesIds = (issues.groupedIssueIds?.[ALL_ISSUES] as string[]) ?? [];
   const nextPageResults = issues.getPaginationData(undefined, undefined)?.nextPageResults;
@@ -87,30 +89,63 @@ export const BaseGanttRoot = observer(function BaseGanttRoot(props: IBaseGanttRo
     const payload: any = { ...data };
     if (data.sort_order) payload.sort_order = data.sort_order.newSortOrder;
 
-    updateIssue && (await updateIssue(issue.project_id, issue.id, payload));
+    if (updateIssue) await updateIssue(issue.project_id, issue.id, payload);
   };
 
-  const isAllowed = allowPermissions([EUserPermissions.ADMIN, EUserPermissions.MEMBER], EUserPermissionsLevel.PROJECT);
+  const isAllowedWorkspace = allowPermissions(
+    [EUserPermissions.ADMIN, EUserPermissions.MEMBER],
+    EUserPermissionsLevel.WORKSPACE,
+    workspaceSlug?.toString()
+  );
+  const isAllowedProject = allowPermissions(
+    [EUserPermissions.ADMIN, EUserPermissions.MEMBER],
+    EUserPermissionsLevel.PROJECT
+  );
+  const isAllowed =
+    storeType === EIssuesStoreType.GLOBAL || storeType === EIssuesStoreType.PROFILE
+      ? isAllowedWorkspace
+      : isAllowedProject;
+
   const updateBlockDates = useCallback(
-    (
-      updates: {
-        id: string;
-        start_date?: string;
-        target_date?: string;
-      }[]
-    ) =>
-      issues.updateIssueDates(workspaceSlug.toString(), updates, projectId.toString()).catch(() => {
+    async (updates: { id: string; start_date?: string; target_date?: string }[]): Promise<void> => {
+      if (!workspaceSlug?.toString()) return;
+
+      const onDatesError = () => {
         setToast({
           type: TOAST_TYPE.ERROR,
           title: t("toast.error"),
           message: "Error while updating work item dates, Please try again Later",
         });
-      }),
-    [issues, projectId, workspaceSlug]
+      };
+
+      if (storeType === EIssuesStoreType.GLOBAL || storeType === EIssuesStoreType.PROFILE) {
+        const byProject = new Map<string, { id: string; start_date?: string; target_date?: string }[]>();
+        for (const u of updates) {
+          const issue = issueMap[u.id];
+          const pid = issue?.project_id;
+          if (!pid) continue;
+          const batch = byProject.get(pid) ?? [];
+          batch.push(u);
+          byProject.set(pid, batch);
+        }
+        await Promise.all(
+          [...byProject.entries()].map(([pid, batch]) =>
+            issues.updateIssueDates(workspaceSlug.toString(), batch, pid).catch(onDatesError)
+          )
+        );
+        return;
+      }
+
+      const routeProjectId = projectId?.toString();
+      if (!routeProjectId) return;
+      await issues.updateIssueDates(workspaceSlug.toString(), updates, routeProjectId).catch(onDatesError);
+    },
+    [issues, projectId, workspaceSlug, storeType, issueMap, t]
   );
 
+  const disableGanttQuickAdd = storeType === EIssuesStoreType.GLOBAL || storeType === EIssuesStoreType.PROFILE;
   const quickAdd =
-    enableIssueCreation && isAllowed && !isCompletedCycle ? (
+    !disableGanttQuickAdd && enableIssueCreation && isAllowed && !isCompletedCycle ? (
       <QuickAddIssueRoot
         layout={EIssueLayoutTypes.GANTT}
         QuickAddButton={GanttQuickAddIssueButton}
@@ -135,7 +170,7 @@ export const BaseGanttRoot = observer(function BaseGanttRoot(props: IBaseGanttRo
             blockIds={issuesIds}
             blockUpdateHandler={updateIssueBlockStructure}
             blockToRender={(data: TIssue) => <IssueGanttBlock issueId={data.id} isEpic={isEpic} />}
-            sidebarToRender={(props) => <IssueGanttSidebar {...props} showAllBlocks isEpic={isEpic} />}
+            sidebarToRender={(sidebarProps) => <IssueGanttSidebar {...sidebarProps} showAllBlocks isEpic={isEpic} />}
             enableBlockLeftResize={isAllowed}
             enableBlockRightResize={isAllowed}
             enableBlockMove={isAllowed}

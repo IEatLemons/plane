@@ -10,7 +10,7 @@ import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
 // plane imports
 import type { IWorkspaceSidebarNavigationItem } from "@plane/constants";
-import { EUserPermissionsLevel, WORKSPACE_SIDEBAR_DYNAMIC_NAVIGATION_ITEMS } from "@plane/constants";
+import { EUserPermissions, EUserPermissionsLevel, WORKSPACE_SIDEBAR_DYNAMIC_NAVIGATION_ITEMS } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
 import { joinUrlPath } from "@plane/utils";
 // components
@@ -68,8 +68,18 @@ export const SidebarItemBase = observer(function SidebarItemBase({
   const showUnpinnedDynamicOnLargeScreen = isLgScreen && isDynamicWorkspaceNavItem;
   if (!isPinned && !staticItems.includes(item.key) && !showUnpinnedDynamicOnLargeScreen) return null;
 
+  const isWorkspaceAdmin = allowPermissions([EUserPermissions.ADMIN], EUserPermissionsLevel.WORKSPACE, slug);
+  const resolvedItemHref =
+    item.key === "views"
+      ? isWorkspaceAdmin
+        ? "/workspace-views/all-issues/"
+        : "/workspace-views/assigned/"
+      : item.href;
+
   const itemHref =
-    item.key === "your_work" && data?.id ? joinUrlPath(slug, item.href, data?.id) : joinUrlPath(slug, item.href);
+    item.key === "your_work" && data?.id
+      ? joinUrlPath(slug, resolvedItemHref, data?.id)
+      : joinUrlPath(slug, resolvedItemHref);
   const icon = getSidebarNavigationItemIcon(item.key);
 
   return (
