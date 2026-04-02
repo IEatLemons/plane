@@ -85,6 +85,8 @@ COPY apps/admin/nginx/docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
 COPY --from=installer /app/apps/admin/build/client /usr/share/nginx/html/god-mode
 
+# Default listen port is 3000; override at runtime with env PORT (see nginx/docker-entrypoint.sh).
+# The published container port in your orchestrator must match PORT or you will see 502 from upstream.
 EXPOSE 3000
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \

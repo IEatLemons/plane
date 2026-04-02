@@ -141,4 +141,15 @@ export class InstanceService extends APIService {
         throw error?.response?.data;
       });
   }
+
+  /**
+   * Instance admin: set a new password for a user by email.
+   */
+  async resetUserPassword(payload: { email: string; new_password: string }): Promise<{ id: string; email: string }> {
+    return this.post("/api/instances/users/reset-password/", payload)
+      .then((response) => response?.data)
+      .catch((error) => {
+        throw error?.response?.data;
+      });
+  }
 }

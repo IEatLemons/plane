@@ -4,6 +4,13 @@
 #   PLANE_ADMIN_IMAGE=你的镜像 PLANE_ADMIN_PUBLISH_PORT=3001 \
 #     docker compose --project-directory apps/admin -f apps/admin/docker-compose.hub.yml up -d
 #
+# 端口说明：
+#   - PLANE_ADMIN_INTERNAL_PORT：容器内 nginx 监听端口（会通过环境变量 PORT 传给入口脚本）。
+#   - PLANE_ADMIN_PUBLISH_PORT：宿主机映射的端口。
+#   二者「冒号右侧」必须与 INTERNAL 一致，例如主机 3002、容器也监听 3002：
+#     PLANE_ADMIN_PUBLISH_PORT=3002 PLANE_ADMIN_INTERNAL_PORT=3002 docker compose ...
+#   若只映射 3002:3000（容器内仍监听 3000），则不要改 PLANE_ADMIN_INTERNAL_PORT（默认 3000）。
+#
 # 构建镜像（上下文为仓库根目录）：
 #   docker build -f apps/admin/Dockerfile.admin -t your/plane-admin:latest \
 #     --build-arg VITE_API_BASE_URL=https://api.example.com \
@@ -13,5 +20,7 @@
 services:
   admin:
     image: ${PLANE_ADMIN_IMAGE:-ieatlemons/plane-admin:latest}
+    environment:
+      PORT: ${PLANE_ADMIN_INTERNAL_PORT:-3000}
     ports:
-      - "${PLANE_ADMIN_PUBLISH_PORT:-3001}:3000"
+      - "${PLANE_ADMIN_PUBLISH_PORT:-3001}:${PLANE_ADMIN_INTERNAL_PORT:-3000}"
