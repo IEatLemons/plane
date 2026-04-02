@@ -10,7 +10,8 @@ import { useParams } from "next/navigation";
 import { Popover } from "@plane/propel/popover";
 import { Tooltip } from "@plane/propel/tooltip";
 import { ControlLink } from "@plane/ui";
-import { findTotalDaysInRange, generateWorkItemLink } from "@plane/utils";
+import { EIssuesStoreType } from "@plane/types";
+import { findTotalDaysInRange, generateWorkItemLink, getStableProjectAccentColor } from "@plane/utils";
 // components
 import { SIDEBAR_WIDTH } from "@/components/gantt-chart/constants";
 // hooks
@@ -34,6 +35,14 @@ type Props = {
   isEpic?: boolean;
 };
 
+const MULTI_PROJECT_GANTT_STORE_TYPES = new Set<EIssuesStoreType>([
+  EIssuesStoreType.GLOBAL,
+  EIssuesStoreType.PROFILE,
+  EIssuesStoreType.PROJECT_VIEW,
+  EIssuesStoreType.TEAM,
+  EIssuesStoreType.TEAM_VIEW,
+]);
+
 export const IssueGanttBlock = observer(function IssueGanttBlock(props: Props) {
   const { issueId, isEpic } = props;
   // router
@@ -44,6 +53,9 @@ export const IssueGanttBlock = observer(function IssueGanttBlock(props: Props) {
   const {
     issue: { getIssueById },
   } = useIssueDetail();
+  const storeType = useIssueStoreType() as GanttStoreType;
+  const { issuesFilter } = useIssues(storeType);
+  const { getProjectIdentifierById } = useProject();
   // hooks
   const { isMobile } = usePlatformOS();
   const { handleRedirection } = useIssuePeekOverviewRedirection(isEpic);
@@ -59,32 +71,55 @@ export const IssueGanttBlock = observer(function IssueGanttBlock(props: Props) {
 
   const duration = findTotalDaysInRange(issueDetails?.start_date, issueDetails?.target_date) || 0;
 
+  const showProjectContextOnBar = MULTI_PROJECT_GANTT_STORE_TYPES.has(storeType as EIssuesStoreType);
+  const projectAccentColor =
+    showProjectContextOnBar && issueDetails?.project_id
+      ? getStableProjectAccentColor(issueDetails.project_id)
+      : undefined;
+  const displayProps = issuesFilter?.issueFilters?.displayProperties;
+  const shouldRenderIssueKey =
+    showProjectContextOnBar && !!issueDetails?.project_id && (displayProps ? displayProps.key : true);
+  const projectIdentifier = issueDetails?.project_id ? getProjectIdentifierById(issueDetails.project_id) : "";
+
   return (
     <Popover delay={100} openOnHover>
       <Popover.Button
         className="w-full"
         render={
-          <div
+          <button
+            type="button"
             id={`issue-${issueId}`}
-            className="space-between relative flex h-full w-full cursor-pointer items-center rounded-sm"
+            className="space-between relative flex h-full w-full cursor-pointer items-stretch overflow-hidden rounded-sm border-0 p-0 text-left font-[inherit]"
             style={blockStyle}
             onClick={handleIssuePeekOverview}
           >
             <div className="absolute top-0 left-0 h-full w-full bg-surface-1/50" />
-            <div
-              className="sticky w-auto flex-1 truncate overflow-hidden px-2.5 py-1 text-13 text-primary"
-              style={{ left: `${SIDEBAR_WIDTH}px` }}
-            >
-              {issueDetails?.name}
-            </div>
-            {isEpic && (
-              <IssueStats
-                issueId={issueId}
-                className="sticky mx-2 w-auto flex-shrink-0 justify-end truncate overflow-hidden font-medium text-primary"
-                showProgressText={duration >= 2}
+            {projectAccentColor && (
+              <div
+                aria-hidden
+                className="relative z-[1] h-full w-[3px] shrink-0 rounded-l-sm"
+                style={{ backgroundColor: projectAccentColor }}
               />
             )}
-          </div>
+            <div
+              className="relative sticky z-[1] flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden px-2.5 py-1 text-13"
+              style={{ left: `${SIDEBAR_WIDTH}px` }}
+            >
+              {shouldRenderIssueKey && issueDetails && (
+                <span className="shrink-0 text-caption-sm-regular font-medium whitespace-nowrap text-secondary">
+                  {projectIdentifier}-{issueDetails.sequence_id}
+                </span>
+              )}
+              <span className="min-w-0 flex-1 truncate text-primary">{issueDetails?.name}</span>
+              {isEpic && (
+                <IssueStats
+                  issueId={issueId}
+                  className="sticky mx-2 w-auto flex-shrink-0 justify-end truncate overflow-hidden font-medium text-primary"
+                  showProgressText={duration >= 2}
+                />
+              )}
+            </div>
+          </button>
         }
       />
       <Popover.Panel side="bottom" align="start">

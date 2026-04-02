@@ -8,6 +8,9 @@ import { planeRuntimeEnvPlugin } from "./vite-runtime-env-plugin";
 
 dotenv.config({ path: path.resolve(__dirname, ".env") });
 
+/** Repo root (apps/web -> ../..). */
+const workspaceRoot = path.resolve(__dirname, "../..");
+
 export default defineConfig(() => ({
   build: {
     assetsInlineLimit: 0,
@@ -24,6 +27,11 @@ export default defineConfig(() => ({
       "next/link": path.resolve(__dirname, "app/compat/next/link.tsx"),
       "next/navigation": path.resolve(__dirname, "app/compat/next/navigation.ts"),
       "next/script": path.resolve(__dirname, "app/compat/next/script.tsx"),
+      // Source aliases: these packages export `./dist/*` only. Dev works without a prior `build`
+      // (avoids "Failed to load .../packages/utils/dist/index.js").
+      "@plane/utils": path.resolve(workspaceRoot, "packages/utils/src/index.ts"),
+      "@plane/constants": path.resolve(workspaceRoot, "packages/constants/src/index.ts"),
+      "@plane/types": path.resolve(workspaceRoot, "packages/types/src/index.ts"),
     },
     dedupe: ["react", "react-dom", "@headlessui/react"],
   },
