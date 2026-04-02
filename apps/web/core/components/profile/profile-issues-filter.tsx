@@ -66,7 +66,12 @@ export const ProfileIssuesFilter = observer(function ProfileIssuesFilter() {
   return (
     <div className="relative flex items-center justify-end gap-2">
       <LayoutSelection
-        layouts={[EIssueLayoutTypes.LIST, EIssueLayoutTypes.KANBAN]}
+        layouts={[
+          EIssueLayoutTypes.LIST,
+          EIssueLayoutTypes.KANBAN,
+          EIssueLayoutTypes.CALENDAR,
+          EIssueLayoutTypes.GANTT,
+        ]}
         onChange={(layout) => handleLayoutChange(layout)}
         selectedLayout={activeLayout}
       />
