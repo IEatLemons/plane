@@ -1,4 +1,13 @@
-# 依赖仓库根目录 .env（非 apps/api/.env）：POSTGRES_* / RABBITMQ_* 等须与宿主机跑 API 时的库密码一致。
+# 依赖仓库根目录 .env（非 apps/api/.env），须与 apps/api/.env 里 DATABASE_URL 等一致。
+# 请勿在下方 plane-db 的 environment 里写 POSTGRES_*：Compose 会先展开 ${VAR:-默认}（通常读不到 ../.env），
+# 再用展开结果覆盖 env_file，导致例如默认可成为 plane_password 而与根 .env 的 plane 不一致。
+# 建议从仓库根目录执行：docker compose -f plane-resources/docker-compose.yml --env-file .env up -d
+# （这样 RabbitMQ/MinIO 等仍使用 ${...} 时也会与根 .env 一致。）
+#
+# 若仍报 password authentication failed：多半是旧 pgdata 卷（曾用默认 plane_password 初始化）。
+# Postgres 只在数据目录为空时读 POSTGRES_PASSWORD；有旧数据时改 .env 不会改库内密码。
+# 清空并重建（会删库）：docker compose -f plane-resources/docker-compose.yml --env-file .env down -v
+# 卷名可用 docker volume ls | grep pgdata 查看（常见 plane-resources_pgdata，不是 plane_pgdata）。
 services:
   plane-db:
     container_name: plane-db
@@ -12,9 +21,6 @@ services:
     env_file:
       - ../.env
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-plane}
-      POSTGRES_DB: ${POSTGRES_DB:-plane}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-plane_password}
       PGDATA: /var/lib/postgresql/data
     networks:
       - plane
@@ -39,9 +45,9 @@ services:
     env_file:
       - ../.env
     environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
-      RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_VHOST:-/}
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-plane}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-plane}
+      RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_VHOST:-plane}
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     networks:
@@ -57,8 +63,8 @@ services:
     env_file:
       - ../.env
     environment:
-      MINIO_ROOT_USER: ${AWS_ACCESS_KEY_ID:-minioadmin}
-      MINIO_ROOT_PASSWORD: ${AWS_SECRET_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_USER: ${AWS_ACCESS_KEY_ID:-access-key}
+      MINIO_ROOT_PASSWORD: ${AWS_SECRET_ACCESS_KEY:-secret-key}
     networks:
       - plane
 

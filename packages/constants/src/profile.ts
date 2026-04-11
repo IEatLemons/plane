@@ -16,6 +16,14 @@ export const PROFILE_VIEWER_TAB = [
   },
 ];
 
+/** Shown when viewing your own profile or when the viewer is a workspace Admin. */
+export const PROFILE_WORK_REPORT_TAB = {
+  key: "reports",
+  route: "reports",
+  i18n_label: "profile.tabs.reports",
+  selected: "/reports/",
+} as const;
+
 export const PROFILE_ADMINS_TAB = [
   {
     key: "assigned",

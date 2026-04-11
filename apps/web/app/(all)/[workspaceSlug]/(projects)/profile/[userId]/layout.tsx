@@ -9,15 +9,22 @@ import { usePathname } from "next/navigation";
 import { Outlet } from "react-router";
 import useSWR from "swr";
 // components
-import { PROFILE_VIEWER_TAB, PROFILE_ADMINS_TAB, EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
+import {
+  PROFILE_VIEWER_TAB,
+  PROFILE_ADMINS_TAB,
+  PROFILE_WORK_REPORT_TAB,
+  EUserPermissions,
+  EUserPermissionsLevel,
+} from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
+import { EUserWorkspaceRoles } from "@plane/types";
 import { AppHeader } from "@/components/core/app-header";
 import { ContentWrapper } from "@/components/core/content-wrapper";
 import { ProfileSidebar } from "@/components/profile/sidebar";
 // constants
 import { USER_PROFILE_PROJECT_SEGREGATION } from "@/constants/fetch-keys";
 // hooks
-import { useUserPermissions } from "@/hooks/store/user";
+import { useUser, useUserPermissions } from "@/hooks/store/user";
 import useSize from "@/hooks/use-window-size";
 // local components
 import { UserService } from "@/services/user.service";
@@ -33,7 +40,8 @@ function UseProfileLayout({ params }: Route.ComponentProps) {
   const { workspaceSlug, userId } = params;
   const pathname = usePathname();
   // store hooks
-  const { allowPermissions } = useUserPermissions();
+  const { allowPermissions, getWorkspaceRoleByWorkspaceSlug } = useUserPermissions();
+  const { data: currentUser } = useUser();
   const { t } = useTranslation();
   // derived values
   const isAuthorized = allowPermissions(
@@ -51,9 +59,21 @@ function UseProfileLayout({ params }: Route.ComponentProps) {
   const isAuthorizedPath =
     pathname.includes("assigned") || pathname.includes("created") || pathname.includes("subscribed");
   const isIssuesTab = pathname.includes("assigned") || pathname.includes("created") || pathname.includes("subscribed");
+  const isReportsPath = pathname.includes("/reports");
 
-  const tabsList = isAuthorized ? [...PROFILE_VIEWER_TAB, ...PROFILE_ADMINS_TAB] : PROFILE_VIEWER_TAB;
-  const currentTab = tabsList.find((tab) => pathname === `/${workspaceSlug}/profile/${userId}${tab.selected}`);
+  const workspaceRole = getWorkspaceRoleByWorkspaceSlug(workspaceSlug.toString());
+  const canViewWorkReport =
+    !!currentUser && (String(currentUser.id) === String(userId) || workspaceRole === EUserWorkspaceRoles.ADMIN);
+  const showWorkReportTab =
+    !!currentUser && (String(currentUser.id) === String(userId) || workspaceRole === EUserWorkspaceRoles.ADMIN);
+
+  let tabsListForHeader = [...PROFILE_VIEWER_TAB];
+  if (isAuthorized) tabsListForHeader = [...tabsListForHeader, ...PROFILE_ADMINS_TAB];
+  if (showWorkReportTab) tabsListForHeader = [...tabsListForHeader, PROFILE_WORK_REPORT_TAB];
+
+  const currentTab = tabsListForHeader.find((tab) => pathname === `/${workspaceSlug}/profile/${userId}${tab.selected}`);
+
+  const showOutlet = (isAuthorized || !isAuthorizedPath) && (!isReportsPath || !currentUser || canViewWorkReport);
 
   return (
     <>
@@ -75,7 +95,7 @@ function UseProfileLayout({ params }: Route.ComponentProps) {
             <div className="flex h-full w-full flex-row md:flex-col md:overflow-hidden">
               <div className="flex w-full flex-col md:h-full md:overflow-hidden">
                 <ProfileNavbar isAuthorized={!!isAuthorized} />
-                {isAuthorized || !isAuthorizedPath ? (
+                {showOutlet ? (
                   <div className={`h-full w-full overflow-hidden`}>
                     <Outlet />
                   </div>

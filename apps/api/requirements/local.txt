@@ -1,4 +1,7 @@
 -r base.txt
+# PostgreSQL driver fallback: psycopg 3 uses ctypes; Python built without libffi/_ctypes
+# (common in some pyenv/devcontainer images) then fails. Django loads psycopg2 if present.
+psycopg2-binary==2.9.10
 # debug toolbar
 django-debug-toolbar==4.3.0
 # formatter

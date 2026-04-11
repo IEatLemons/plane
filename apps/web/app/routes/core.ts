@@ -91,6 +91,10 @@ export const coreRoutes: RouteConfigEntry[] = [
         layout("./(all)/[workspaceSlug]/(projects)/profile/[userId]/layout.tsx", [
           route(":workspaceSlug/profile/:userId", "./(all)/[workspaceSlug]/(projects)/profile/[userId]/page.tsx"),
           route(
+            ":workspaceSlug/profile/:userId/reports",
+            "./(all)/[workspaceSlug]/(projects)/profile/[userId]/reports/page.tsx"
+          ),
+          route(
             ":workspaceSlug/profile/:userId/:profileViewId",
             "./(all)/[workspaceSlug]/(projects)/profile/[userId]/[profileViewId]/page.tsx"
           ),

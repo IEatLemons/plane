@@ -133,3 +133,5 @@ from .draft import (
     DraftIssueSerializer,
     DraftIssueDetailSerializer,
 )
+
+from .work_report import WorkReportSerializer, WorkReportNotesSerializer
