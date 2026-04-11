@@ -11,9 +11,20 @@ dotenv.config({ path: path.resolve(__dirname, ".env") });
 /** Repo root (apps/web -> ../..). */
 const workspaceRoot = path.resolve(__dirname, "../..");
 
+const rollupMaxParallelFileOps = (() => {
+  const raw = process.env.ROLLUP_MAX_PARALLEL_FILE_OPS?.trim();
+  if (!raw) return undefined;
+  const n = Number(raw);
+  return Number.isFinite(n) && n > 0 ? n : undefined;
+})();
+
 export default defineConfig(() => ({
   build: {
     assetsInlineLimit: 0,
+    rollupOptions: {
+      // Lowers peak RSS during chunk rendering; set ROLLUP_MAX_PARALLEL_FILE_OPS in Docker/CI if builds OOM.
+      ...(rollupMaxParallelFileOps !== undefined ? { maxParallelFileOps: rollupMaxParallelFileOps } : {}),
+    },
   },
   plugins: [
     reactRouter(),

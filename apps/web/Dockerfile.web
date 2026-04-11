@@ -45,8 +45,11 @@ RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store CI=true pnpm install --o
 
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV TURBO_TELEMETRY_DISABLED=1
+# Web production build (Vite/Rollup) can exceed default Docker memory during "rendering chunks".
+# Tune host: Docker Desktop → Resources → Memory (often need 8 GiB+). These reduce peak RSS:
+ENV ROLLUP_MAX_PARALLEL_FILE_OPS=4
 
-RUN pnpm turbo run build --filter=web
+RUN pnpm turbo run build --filter=web --concurrency=1
 
 # *****************************************************************************
 # STAGE 3: Serve with nginx

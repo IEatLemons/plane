@@ -110,4 +110,5 @@ build/
 build/
 .react-router/
 temp/
-scripts/
+# 仅忽略仓库根目录的 scripts/；勿使用 `scripts/`（会误忽略 apps/web/scripts 等）
+/scripts/
