@@ -1,11 +1,15 @@
 #!/bin/bash
 set -e
 python manage.py wait_for_db
-# Wait for migrations
-python manage.py wait_for_migrations
 
-# Create the default bucket
-#!/bin/bash
+# Apply migrations inside this container unless disabled (e.g. separate migrator-only job in CI).
+# Railway/single-service deploys often have nothing else running `migrate`; without this, wait_for_migrations loops forever.
+# Idempotent if migrations already applied. Set PLANE_RUN_MIGRATE_ON_START=0 to skip.
+if [ "${PLANE_RUN_MIGRATE_ON_START:-1}" != "0" ]; then
+  python manage.py migrate --noinput
+fi
+
+python manage.py wait_for_migrations
 
 # Collect system information
 HOSTNAME=$(hostname)
