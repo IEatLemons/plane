@@ -9,8 +9,8 @@ import { useTranslation } from "@plane/i18n";
 import { Tooltip } from "@plane/propel/tooltip";
 import type { IWorkItemFilterInstance } from "@plane/shared-state";
 import { EIssueLayoutTypes, type TSupportedFilterForUpdate } from "@plane/types";
-import { Avatar } from "@plane/ui";
-import { cn, getFileURL } from "@plane/utils";
+import { cn } from "@plane/utils";
+import { MemberBoringAvatar } from "@/components/member/member-boring-avatar";
 import { applyWorkspaceMemberAssigneeShortcut, isAssigneeShortcutActive } from "@/helpers/workspace-quick-filters";
 import { useMember } from "@/hooks/store/use-member";
 
@@ -80,7 +80,7 @@ export const WorkspaceMemberShortcutStrip = observer(function WorkspaceMemberSho
                 )}
                 onClick={() => handleMemberClick(memberId)}
               >
-                <Avatar name={member.display_name} src={getFileURL(member.avatar_url)} showTooltip={false} size="sm" />
+                <MemberBoringAvatar seed={member.id} avatarUrl={member.avatar_url} size={20} />
               </button>
             </Tooltip>
           );

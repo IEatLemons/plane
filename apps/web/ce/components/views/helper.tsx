@@ -34,11 +34,7 @@ export function GlobalViewLayoutSelection(props: TLayoutSelectionProps) {
         <LayoutSelection layouts={GLOBAL_VIEW_LAYOUTS} onChange={onChange} selectedLayout={selectedLayout} />
       </div>
       <div className="flex @4xl:hidden">
-        <MobileLayoutSelection
-          layouts={GLOBAL_VIEW_LAYOUTS}
-          onChange={onChange}
-          activeLayout={selectedLayout}
-        />
+        <MobileLayoutSelection layouts={GLOBAL_VIEW_LAYOUTS} onChange={onChange} activeLayout={selectedLayout} />
       </div>
     </>
   );

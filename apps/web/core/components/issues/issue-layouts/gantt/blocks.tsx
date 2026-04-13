@@ -14,17 +14,18 @@ import { EIssuesStoreType } from "@plane/types";
 import { findTotalDaysInRange, generateWorkItemLink, getStableProjectAccentColor } from "@plane/utils";
 // components
 import { SIDEBAR_WIDTH } from "@/components/gantt-chart/constants";
+import { MemberBoringAvatar } from "@/components/member/member-boring-avatar";
 // hooks
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
-import { useIssues } from "@/hooks/store/use-issues";
+import { useMember } from "@/hooks/store/use-member";
 import { useProject } from "@/hooks/store/use-project";
 import { useProjectState } from "@/hooks/store/use-project-state";
 import { useIssueStoreType } from "@/hooks/use-issue-layout-store";
 import useIssuePeekOverviewRedirection from "@/hooks/use-issue-peek-overview-redirection";
 import { usePlatformOS } from "@/hooks/use-platform-os";
 // plane web imports
-import { IssueIdentifier } from "@/plane-web/components/issues/issue-details/issue-identifier";
 import { IssueStats } from "@/plane-web/components/issues/issue-layouts/issue-stats";
+import { useGanttAssigneeTailDisplay } from "./gantt-assignee-display-context";
 // local imports
 import { WorkItemPreviewCard } from "../../preview-card";
 import { getBlockViewDetails } from "../utils";
@@ -54,8 +55,8 @@ export const IssueGanttBlock = observer(function IssueGanttBlock(props: Props) {
     issue: { getIssueById },
   } = useIssueDetail();
   const storeType = useIssueStoreType() as GanttStoreType;
-  const { issuesFilter } = useIssues(storeType);
-  const { getProjectIdentifierById } = useProject();
+  const showAssigneeTail = useGanttAssigneeTailDisplay();
+  const { getUserDetails } = useMember();
   // hooks
   const { isMobile } = usePlatformOS();
   const { handleRedirection } = useIssuePeekOverviewRedirection(isEpic);
@@ -76,10 +77,8 @@ export const IssueGanttBlock = observer(function IssueGanttBlock(props: Props) {
     showProjectContextOnBar && issueDetails?.project_id
       ? getStableProjectAccentColor(issueDetails.project_id)
       : undefined;
-  const displayProps = issuesFilter?.issueFilters?.displayProperties;
-  const shouldRenderIssueKey =
-    showProjectContextOnBar && !!issueDetails?.project_id && (displayProps ? displayProps.key : true);
-  const projectIdentifier = issueDetails?.project_id ? getProjectIdentifierById(issueDetails.project_id) : "";
+  const firstAssigneeId = issueDetails?.assignee_ids?.[0];
+  const assigneeMember = firstAssigneeId ? getUserDetails(firstAssigneeId) : undefined;
 
   return (
     <Popover delay={100} openOnHover>
@@ -106,11 +105,6 @@ export const IssueGanttBlock = observer(function IssueGanttBlock(props: Props) {
                 className="relative sticky z-[1] flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden px-2.5 py-1 text-13"
                 style={{ left: `${SIDEBAR_WIDTH}px` }}
               >
-                {shouldRenderIssueKey && issueDetails && (
-                  <span className="shrink-0 text-caption-sm-regular font-medium whitespace-nowrap text-secondary">
-                    {projectIdentifier}-{issueDetails.sequence_id}
-                  </span>
-                )}
                 <span className="min-w-0 flex-1 truncate text-primary">{issueDetails?.name}</span>
                 {isEpic && (
                   <IssueStats
@@ -118,6 +112,13 @@ export const IssueGanttBlock = observer(function IssueGanttBlock(props: Props) {
                     className="sticky mx-2 w-auto flex-shrink-0 justify-end truncate overflow-hidden font-medium text-primary"
                     showProgressText={duration >= 2}
                   />
+                )}
+                {showAssigneeTail && firstAssigneeId && (
+                  <Tooltip tooltipContent={assigneeMember?.display_name ?? ""} isMobile={isMobile}>
+                    <span className="flex shrink-0">
+                      <MemberBoringAvatar seed={firstAssigneeId} avatarUrl={assigneeMember?.avatar_url} size={18} />
+                    </span>
+                  </Tooltip>
                 )}
               </div>
             </div>
@@ -152,8 +153,6 @@ export const IssueGanttSidebarBlock = observer(function IssueGanttSidebarBlock(p
     issue: { getIssueById },
   } = useIssueDetail();
   const { isMobile } = usePlatformOS();
-  const storeType = useIssueStoreType() as GanttStoreType;
-  const { issuesFilter } = useIssues(storeType);
   const { getProjectIdentifierById } = useProject();
 
   // handlers
@@ -187,15 +186,6 @@ export const IssueGanttSidebarBlock = observer(function IssueGanttSidebarBlock(p
       disabled={!!issueDetails?.tempId}
     >
       <div className="relative flex h-full w-full cursor-pointer items-center gap-2">
-        {issueDetails?.project_id && (
-          <IssueIdentifier
-            issueId={issueDetails.id}
-            projectId={issueDetails.project_id}
-            size="xs"
-            variant="tertiary"
-            displayProperties={issuesFilter?.issueFilters?.displayProperties}
-          />
-        )}
         <Tooltip tooltipContent={issueDetails?.name} isMobile={isMobile}>
           <span className="flex-grow truncate text-13 font-medium">{issueDetails?.name}</span>
         </Tooltip>

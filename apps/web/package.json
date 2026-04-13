@@ -42,6 +42,7 @@
     "@react-router/node": "catalog:",
     "@tanstack/react-table": "^8.21.3",
     "axios": "catalog:",
+    "boring-avatars": "catalog:",
     "clsx": "^2.0.0",
     "cmdk": "^1.0.0",
     "comlink": "^4.4.1",

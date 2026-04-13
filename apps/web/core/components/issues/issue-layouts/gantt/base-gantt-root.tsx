@@ -24,12 +24,14 @@ import { useUserPermissions } from "@/hooks/store/user";
 import { useIssueStoreType } from "@/hooks/use-issue-layout-store";
 import { useIssuesActions } from "@/hooks/use-issues-actions";
 import { useTimeLineChart } from "@/hooks/use-timeline-chart";
+import { computeShowGanttAssigneeTail } from "@/helpers/gantt-assignee-tail";
 // plane web hooks
 import { useBulkOperationStatus } from "@/plane-web/hooks/use-bulk-operation-status";
 
 import { IssueLayoutHOC } from "../issue-layout-HOC";
 import { GanttQuickAddIssueButton, QuickAddIssueRoot } from "../quick-add";
 import { IssueGanttBlock } from "./blocks";
+import { GanttAssigneeTailProvider } from "./gantt-assignee-display-context";
 
 interface IBaseGanttRoot {
   viewId?: string | undefined;
@@ -75,6 +77,7 @@ export const BaseGanttRoot = observer(function BaseGanttRoot(ganttRootProps: IBa
   }, [initGantt]);
 
   const issuesIds = (issues.groupedIssueIds?.[ALL_ISSUES] as string[]) ?? [];
+  const showAssigneeTail = computeShowGanttAssigneeTail(issuesIds, (id) => issueMap[id]);
   const nextPageResults = issues.getPaginationData(undefined, undefined)?.nextPageResults;
 
   const { enableIssueCreation } = issues?.viewFlags || {};
@@ -162,30 +165,32 @@ export const BaseGanttRoot = observer(function BaseGanttRoot(ganttRootProps: IBa
   return (
     <IssueLayoutHOC layout={EIssueLayoutTypes.GANTT}>
       <TimeLineTypeContext.Provider value={GANTT_TIMELINE_TYPE.ISSUE}>
-        <div className="h-full w-full">
-          <GanttChartRoot
-            border={false}
-            title={isEpic ? t("epic.label", { count: 2 }) : t("issue.label", { count: 2 })}
-            loaderTitle={isEpic ? t("epic.label", { count: 2 }) : t("issue.label", { count: 2 })}
-            blockIds={issuesIds}
-            blockUpdateHandler={updateIssueBlockStructure}
-            blockToRender={(data: TIssue) => <IssueGanttBlock issueId={data.id} isEpic={isEpic} />}
-            sidebarToRender={(sidebarProps) => <IssueGanttSidebar {...sidebarProps} showAllBlocks isEpic={isEpic} />}
-            enableBlockLeftResize={isAllowed}
-            enableBlockRightResize={isAllowed}
-            enableBlockMove={isAllowed}
-            enableReorder={appliedDisplayFilters?.order_by === "sort_order" && isAllowed}
-            enableAddBlock={isAllowed}
-            enableSelection={isBulkOperationsEnabled && isAllowed}
-            quickAdd={quickAdd}
-            loadMoreBlocks={loadMoreIssues}
-            canLoadMoreBlocks={nextPageResults}
-            updateBlockDates={updateBlockDates}
-            showAllBlocks
-            enableDependency
-            isEpic={isEpic}
-          />
-        </div>
+        <GanttAssigneeTailProvider showAssigneeTail={showAssigneeTail}>
+          <div className="h-full w-full">
+            <GanttChartRoot
+              border={false}
+              title={isEpic ? t("epic.label", { count: 2 }) : t("issue.label", { count: 2 })}
+              loaderTitle={isEpic ? t("epic.label", { count: 2 }) : t("issue.label", { count: 2 })}
+              blockIds={issuesIds}
+              blockUpdateHandler={updateIssueBlockStructure}
+              blockToRender={(data: TIssue) => <IssueGanttBlock issueId={data.id} isEpic={isEpic} />}
+              sidebarToRender={(sidebarProps) => <IssueGanttSidebar {...sidebarProps} showAllBlocks isEpic={isEpic} />}
+              enableBlockLeftResize={isAllowed}
+              enableBlockRightResize={isAllowed}
+              enableBlockMove={isAllowed}
+              enableReorder={appliedDisplayFilters?.order_by === "sort_order" && isAllowed}
+              enableAddBlock={isAllowed}
+              enableSelection={isBulkOperationsEnabled && isAllowed}
+              quickAdd={quickAdd}
+              loadMoreBlocks={loadMoreIssues}
+              canLoadMoreBlocks={nextPageResults}
+              updateBlockDates={updateBlockDates}
+              showAllBlocks
+              enableDependency
+              isEpic={isEpic}
+            />
+          </div>
+        </GanttAssigneeTailProvider>
       </TimeLineTypeContext.Provider>
     </IssueLayoutHOC>
   );
