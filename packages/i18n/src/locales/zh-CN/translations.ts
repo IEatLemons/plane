@@ -2652,4 +2652,8 @@ export default {
     due_next_7_days: "未来 7 天",
     assigned_to_me: "指派给我",
   },
+  workspace_member_shortcuts: {
+    members_label: "成员",
+    member_filter_tooltip: "查看指派给 {{name}} 的工作项",
+  },
 } as const;

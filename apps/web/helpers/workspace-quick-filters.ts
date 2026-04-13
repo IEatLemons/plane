@@ -52,6 +52,9 @@ export const isAssignedToMeFilterActive = (filter: IWorkItemFilterInstance, user
   );
 };
 
+/** Whether the rich filter includes an assignee shortcut targeting this user (same semantics as "assigned to me" for any member). */
+export const isAssigneeShortcutActive = isAssignedToMeFilterActive;
+
 const toBuildConditions = (filter: IWorkItemFilterInstance): TWorkItemFilterCondition[] =>
   filter.allConditionsForDisplay.map((c) => ({
     property: c.property,
@@ -63,6 +66,42 @@ const stripProperties = (
   conditions: TWorkItemFilterCondition[],
   properties: TWorkItemFilterProperty[]
 ): TWorkItemFilterCondition[] => conditions.filter((c) => !properties.includes(c.property));
+
+/**
+ * Pure toggle: strip assignee_id, then either clear (if that user was active) or set assignee to memberUserId.
+ * Exported for unit tests without a full IWorkItemFilterInstance.
+ */
+export const applyWorkspaceMemberAssigneeShortcutFromConditions = (
+  conditions: TWorkItemFilterCondition[],
+  memberUserId: string
+): TWorkItemFilterExpression => {
+  if (!memberUserId) {
+    const built = buildWorkItemFilterExpressionFromConditions({ conditions: [...conditions] });
+    return built ?? {};
+  }
+  const next = stripProperties([...conditions], ["assignee_id"]);
+  const wasActive = conditions.some(
+    (c) =>
+      c.property === "assignee_id" &&
+      c.operator === COLLECTION_OPERATOR.IN &&
+      (c.value === memberUserId || (Array.isArray(c.value) && (c.value as string[]).includes(memberUserId)))
+  );
+  if (!wasActive) {
+    next.push({
+      property: "assignee_id",
+      operator: COLLECTION_OPERATOR.IN,
+      value: memberUserId,
+    });
+  }
+  const built = buildWorkItemFilterExpressionFromConditions({ conditions: next });
+  return built ?? {};
+};
+
+export const applyWorkspaceMemberAssigneeShortcut = (
+  filter: IWorkItemFilterInstance,
+  memberUserId: string
+): TWorkItemFilterExpression =>
+  applyWorkspaceMemberAssigneeShortcutFromConditions(toBuildConditions(filter), memberUserId);
 
 /**
  * Applies a workspace quick filter preset by rebuilding the rich filter expression.

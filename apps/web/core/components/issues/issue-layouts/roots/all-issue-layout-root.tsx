@@ -18,6 +18,7 @@ import { IssuePeekOverview } from "@/components/issues/peek-overview";
 import { WorkspaceActiveLayout } from "@/components/views/helper";
 import { WorkspaceLevelWorkItemFiltersHOC } from "@/components/work-item-filters/filters-hoc/workspace-level";
 import { WorkItemFiltersRow } from "@/components/work-item-filters/filters-row";
+import { WorkspaceMemberShortcutStrip } from "@/components/work-item-filters/workspace-member-shortcut-strip";
 import { WorkspaceQuickFilterChips } from "@/components/work-item-filters/workspace-quick-filter-chips";
 // hooks
 import { useGlobalView } from "@/hooks/store/use-global-view";
@@ -157,6 +158,13 @@ export const AllIssueLayoutRoot = observer(function AllIssueLayoutRoot(props: Pr
                     currentUserId={currentUser?.id}
                     workspaceSlug={workspaceSlug}
                     globalViewId={globalViewId}
+                    updateFilters={updateFilters}
+                  />
+                  <WorkspaceMemberShortcutStrip
+                    filter={globalWorkItemsFilter}
+                    workspaceSlug={workspaceSlug}
+                    globalViewId={globalViewId}
+                    activeLayout={activeLayout}
                     updateFilters={updateFilters}
                   />
                   <WorkItemFiltersRow

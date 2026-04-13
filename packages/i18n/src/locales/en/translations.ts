@@ -2778,4 +2778,8 @@ export default {
     due_next_7_days: "Next 7 days",
     assigned_to_me: "Assigned to me",
   },
+  workspace_member_shortcuts: {
+    members_label: "Members",
+    member_filter_tooltip: "View work items assigned to {{name}}",
+  },
 } as const;
