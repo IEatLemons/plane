@@ -48,7 +48,7 @@ function ProfileWorkReportsPage() {
   const canEdit = !!currentUser && currentUser.id === uid;
 
   const load = useCallback(
-    async (refresh?: boolean) => {
+    async (refresh?: boolean, options?: { signal?: AbortSignal }) => {
       if (!ws || !uid || !canView) return;
       setLoading(true);
       setError(null);
@@ -59,20 +59,26 @@ function ProfileWorkReportsPage() {
           user_id: uid,
           refresh,
         });
+        if (options?.signal?.aborted) return;
         setReport(data);
         setNotesDraft(data.notes ?? "");
       } catch {
+        if (options?.signal?.aborted) return;
         setError(t("profile.work_report.load_error"));
         setReport(null);
       } finally {
-        setLoading(false);
+        if (!options?.signal?.aborted) {
+          setLoading(false);
+        }
       }
     },
     [ws, uid, canView, reportType, periodDate, t]
   );
 
   useEffect(() => {
-    void load(false);
+    const controller = new AbortController();
+    void load(false, { signal: controller.signal });
+    return () => controller.abort();
   }, [load]);
 
   const summary = report?.auto_summary;

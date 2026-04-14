@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { useContext } from "react";
+import { useCallback, useContext } from "react";
 // context
 import { TranslationContext } from "../context";
 // types
@@ -32,10 +32,19 @@ export function useTranslation(): TTranslationStore {
     throw new Error("useTranslation must be used within a TranslationProvider");
   }
 
+  // Stable references: `bind`/`() => store.t()` per render breaks useCallback/useEffect deps site-wide.
+  const t = useCallback((key: string, params?: Record<string, unknown>) => store.t(key, params), [store]);
+  const changeLanguage = useCallback(
+    (lng: TLanguage) => {
+      void store.setLanguage(lng);
+    },
+    [store]
+  );
+
   return {
-    t: store.t.bind(store),
+    t,
     currentLocale: store.currentLocale,
-    changeLanguage: (lng: TLanguage) => store.setLanguage(lng),
+    changeLanguage,
     languages: store.availableLanguages,
   };
 }

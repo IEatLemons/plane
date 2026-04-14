@@ -5,5 +5,6 @@
  */
 
 export * from "./base";
+export * from "./batch-issue-import";
 export * from "./modal";
 export * from "./state";

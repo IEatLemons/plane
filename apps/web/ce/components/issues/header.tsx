@@ -117,17 +117,28 @@ export const IssuesHeader = observer(function IssuesHeader() {
           />
         </div>
         {canUserCreateIssue && (
-          <Button
-            variant="primary"
-            size="lg"
-            onClick={() => {
-              toggleCreateIssueModal(true, EIssuesStoreType.PROJECT);
-            }}
-            data-ph-element={WORK_ITEM_TRACKER_ELEMENTS.HEADER_ADD_BUTTON.WORK_ITEMS}
-          >
-            <div className="block sm:hidden">{t("issue.label", { count: 1 })}</div>
-            <div className="hidden sm:block">{t("issue.add.label")}</div>
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant="secondary"
+              size="lg"
+              onClick={() => {
+                router.push(`/${workspaceSlug?.toString()}/projects/${projectId?.toString()}/issues/batch-import`);
+              }}
+            >
+              {t("issue_batch_import.nav")}
+            </Button>
+            <Button
+              variant="primary"
+              size="lg"
+              onClick={() => {
+                toggleCreateIssueModal(true, EIssuesStoreType.PROJECT);
+              }}
+              data-ph-element={WORK_ITEM_TRACKER_ELEMENTS.HEADER_ADD_BUTTON.WORK_ITEMS}
+            >
+              <div className="block sm:hidden">{t("issue.label", { count: 1 })}</div>
+              <div className="hidden sm:block">{t("issue.add.label")}</div>
+            </Button>
+          </div>
         )}
       </Header.RightItem>
     </Header>
