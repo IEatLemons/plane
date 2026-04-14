@@ -1682,6 +1682,12 @@ export default {
       save_notes: "Save notes",
       admin_readonly: "Only the report owner can edit notes.",
       load_error: "Could not load work report.",
+      by_project_title: "By project",
+      completed_in_period: "Completed in this period",
+      in_progress_now: "In progress",
+      team_daily_title: "Team daily report",
+      team_daily_description: "Per-member and per-project completion and in-progress work (admins only).",
+      team_daily_load_error: "Could not load team daily report.",
     },
     empty_state: {
       activity: {

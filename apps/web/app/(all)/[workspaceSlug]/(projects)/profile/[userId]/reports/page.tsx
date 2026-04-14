@@ -12,6 +12,7 @@ import { useTranslation } from "@plane/i18n";
 import type { TWorkReport, TWorkReportType } from "@plane/types";
 import { Button } from "@plane/propel/button";
 import { PageHead } from "@/components/core/page-title";
+import { WorkReportByProjectLists } from "@/components/work-report/by-project-lists";
 import { useUser } from "@/hooks/store/user";
 import { useUserPermissions } from "@/hooks/store/user";
 import { WorkReportService } from "@/services/work-report.service";
@@ -168,7 +169,11 @@ function ProfileWorkReportsPage() {
                   </li>
                 </ul>
               )}
-              <h5 className="mb-2 text-12 font-medium text-tertiary">{t("profile.work_report.highlights")}</h5>
+              <h5 className="mt-4 mb-2 text-12 font-medium text-tertiary">
+                {t("profile.work_report.by_project_title")}
+              </h5>
+              <WorkReportByProjectLists workspaceSlug={ws} byProject={summary?.by_project ?? []} />
+              <h5 className="mt-4 mb-2 text-12 font-medium text-tertiary">{t("profile.work_report.highlights")}</h5>
               <ul className="vertical-scrollbar scrollbar-sm max-h-60 space-y-2 overflow-y-auto text-12 text-secondary">
                 {(summary?.highlights ?? []).map((h) => (
                   <li key={h.id} className="border-b border-subtle/60 pb-2 last:border-0">

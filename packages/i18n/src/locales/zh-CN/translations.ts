@@ -24,6 +24,7 @@ export default {
     pro: "专业版",
     upgrade: "升级",
     stickies: "便签",
+    daily_team_report: "团队日报",
   },
   auth: {
     common: {
@@ -1799,6 +1800,12 @@ export default {
       save_notes: "保存说明",
       admin_readonly: "仅汇报本人可编辑说明。",
       load_error: "无法加载工作汇报。",
+      by_project_title: "按项目",
+      completed_in_period: "本周期完成",
+      in_progress_now: "进行中",
+      team_daily_title: "团队日报",
+      team_daily_description: "按成员、按项目展示完成与进行中（仅管理员）。",
+      team_daily_load_error: "无法加载团队日报。",
     },
     empty_state: {
       activity: {

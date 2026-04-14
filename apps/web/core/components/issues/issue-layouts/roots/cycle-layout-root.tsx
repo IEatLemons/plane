@@ -119,7 +119,7 @@ export const CycleLayoutRoot = observer(function CycleLayoutRoot() {
                   }}
                 />
               )}
-              <div className="h-full w-full overflow-auto">
+              <div className="min-h-0 w-full flex-1 overflow-auto">
                 <CycleIssueLayout activeLayout={activeLayout} cycleId={cycleId} isCompletedCycle={isCompletedCycle} />
               </div>
               {/* peek overview */}

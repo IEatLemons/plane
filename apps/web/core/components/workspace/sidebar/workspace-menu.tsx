@@ -10,7 +10,7 @@ import { useParams } from "next/navigation";
 import { Disclosure, Transition } from "@headlessui/react";
 // plane imports
 import { EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
-import { AnalyticsIcon, CycleIcon, ProjectIcon, ViewsIcon } from "@plane/propel/icons";
+import { AnalyticsIcon, CycleIcon, OverviewIcon, ProjectIcon, ViewsIcon } from "@plane/propel/icons";
 import { EUserWorkspaceRoles } from "@plane/types";
 // hooks
 import { useUserPermissions } from "@/hooks/store/user";
@@ -60,6 +60,13 @@ export const SidebarWorkspaceMenu = observer(function SidebarWorkspaceMenu() {
         href: `/${workspaceSlug}/analytics/`,
         access: [EUserWorkspaceRoles.ADMIN, EUserWorkspaceRoles.MEMBER],
         Icon: AnalyticsIcon,
+      },
+      {
+        key: "daily-team-report",
+        labelTranslationKey: "sidebar.daily_team_report",
+        href: `/${workspaceSlug}/daily-report/`,
+        access: [EUserWorkspaceRoles.ADMIN],
+        Icon: OverviewIcon,
       },
     ];
   }, [workspaceSlug, allowPermissions]);

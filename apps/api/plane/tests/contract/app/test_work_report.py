@@ -44,6 +44,7 @@ class TestWorkReportAPI:
         assert response.data["report_type"] == "daily"
         assert response.data["period_start"] == "2026-04-07"
         assert "auto_summary" in response.data
+        assert "by_project" in response.data["auto_summary"]
         assert WorkReport.objects.filter(workspace=workspace).count() == 1
 
     def test_admin_can_view_other_user_report(self, session_client, workspace_with_roles):
@@ -98,3 +99,30 @@ class TestWorkReportAPI:
         )
         patch_res = session_client.patch(patch_url, {"notes": "hijack"}, format="json")
         assert patch_res.status_code == status.HTTP_403_FORBIDDEN
+
+
+@pytest.mark.contract
+@pytest.mark.django_db
+class TestDailyTeamDigestAPI:
+    def test_admin_can_get_daily_team_digest(self, session_client, workspace_with_roles):
+        workspace, _, member_user = workspace_with_roles
+        url = reverse("workspace-daily-team-digest", kwargs={"slug": workspace.slug})
+        response = session_client.get(url, {"period_date": "2026-04-07"})
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["period_start"] == "2026-04-07"
+        assert response.data["period_end"] == "2026-04-07"
+        assert "users" in response.data
+        user_ids = {u["user_id"] for u in response.data["users"]}
+        assert str(member_user.id) in user_ids
+        for row in response.data["users"]:
+            assert "display_name" in row
+            assert "auto_summary" in row
+            assert "by_project" in row["auto_summary"]
+
+    def test_member_cannot_get_daily_team_digest(self, workspace_with_roles, member_user):
+        workspace, _, _ = workspace_with_roles
+        client = APIClient()
+        client.force_authenticate(user=member_user)
+        url = reverse("workspace-daily-team-digest", kwargs={"slug": workspace.slug})
+        response = client.get(url, {"period_date": "2026-04-07"})
+        assert response.status_code == status.HTTP_403_FORBIDDEN

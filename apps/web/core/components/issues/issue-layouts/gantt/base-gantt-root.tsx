@@ -181,6 +181,7 @@ export const BaseGanttRoot = observer(function BaseGanttRoot(ganttRootProps: IBa
               enableReorder={appliedDisplayFilters?.order_by === "sort_order" && isAllowed}
               enableAddBlock={isAllowed}
               enableSelection={isBulkOperationsEnabled && isAllowed}
+              bottomSpacing={Boolean(quickAdd)}
               quickAdd={quickAdd}
               loadMoreBlocks={loadMoreIssues}
               canLoadMoreBlocks={nextPageResults}

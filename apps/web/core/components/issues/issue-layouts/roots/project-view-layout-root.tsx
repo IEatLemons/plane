@@ -109,7 +109,7 @@ export const ProjectViewLayoutRoot = observer(function ProjectViewLayoutRoot() {
                 }}
               />
             )}
-            <div className="relative h-full w-full overflow-auto">
+            <div className="relative min-h-0 w-full flex-1 overflow-auto">
               <ProjectViewIssueLayout activeLayout={activeLayout} viewId={viewId.toString()} />
             </div>
             {/* peek overview */}

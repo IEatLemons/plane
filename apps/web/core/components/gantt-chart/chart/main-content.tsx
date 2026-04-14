@@ -162,7 +162,7 @@ export const GanttChartMainContent = observer(function GanttChartMainContent(pro
   const ActiveChartView = CHART_VIEW_COMPONENTS[currentView];
 
   return (
-    <>
+    <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col">
       <TimelineDragHelper ganttContainerRef={ganttContainerRef} />
       <MultipleSelectGroup
         containerRef={ganttContainerRef}
@@ -172,12 +172,12 @@ export const GanttChartMainContent = observer(function GanttChartMainContent(pro
         disabled={!isBulkOperationsEnabled || isEpic}
       >
         {(helpers) => (
-          <>
+          <div className="flex min-h-0 flex-1 flex-col">
             <div
               // DO NOT REMOVE THE ID
               id="gantt-container"
               className={cn(
-                "vertical-scrollbar horizontal-scrollbar flex scrollbar-lg h-full w-full overflow-auto border-t-[0.5px] border-subtle",
+                "vertical-scrollbar horizontal-scrollbar flex scrollbar-lg min-h-0 w-full flex-1 overflow-auto border-t-[0.5px] border-subtle",
                 {
                   "mb-8": bottomSpacing,
                 }
@@ -199,7 +199,7 @@ export const GanttChartMainContent = observer(function GanttChartMainContent(pro
                 showAllBlocks={showAllBlocks}
                 isEpic={isEpic}
               />
-              <div className="relative h-max min-h-full flex-shrink-0 flex-grow">
+              <div className="relative h-max min-h-full min-w-0 flex-shrink-0 flex-grow">
                 <ActiveChartView />
                 {currentViewData && (
                   <div
@@ -239,9 +239,9 @@ export const GanttChartMainContent = observer(function GanttChartMainContent(pro
             </div>
             {quickAdd ? quickAdd : null}
             <IssueBulkOperationsRoot selectionHelpers={helpers} />
-          </>
+          </div>
         )}
       </MultipleSelectGroup>
-    </>
+    </div>
   );
 });

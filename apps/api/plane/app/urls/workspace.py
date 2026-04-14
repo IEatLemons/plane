@@ -38,6 +38,7 @@ from plane.app.views import (
     WorkspaceUserPreferenceViewSet,
     WorkspaceWorkReportDetailEndpoint,
     WorkspaceWorkReportEndpoint,
+    WorkspaceDailyTeamDigestEndpoint,
 )
 
 
@@ -140,6 +141,11 @@ urlpatterns = [
         "workspaces/<str:slug>/work-reports/<uuid:pk>/",
         WorkspaceWorkReportDetailEndpoint.as_view(),
         name="workspace-work-report-detail",
+    ),
+    path(
+        "workspaces/<str:slug>/daily-team-digest/",
+        WorkspaceDailyTeamDigestEndpoint.as_view(),
+        name="workspace-daily-team-digest",
     ),
     path(
         "workspaces/<str:slug>/user-stats/<uuid:user_id>/",

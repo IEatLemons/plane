@@ -4,7 +4,6 @@
  * See the LICENSE file for details.
  */
 
-import type { FC } from "react";
 import { useEffect, useState } from "react";
 import { observer } from "mobx-react";
 import { createPortal } from "react-dom";
@@ -53,6 +52,12 @@ const timelineViewHelpers = {
   month: monthView,
   quarter: quarterView,
 };
+
+function updateCurrentLeftScrollPosition(width: number) {
+  const scrollContainer = document.querySelector("#gantt-container") as HTMLDivElement;
+  if (!scrollContainer) return;
+  scrollContainer.scrollLeft = width + scrollContainer.scrollLeft;
+}
 
 export const ChartViewRoot = observer(function ChartViewRoot(props: ChartViewRootProps) {
   const {
@@ -153,13 +158,6 @@ export const ChartViewRoot = observer(function ChartViewRoot(props: ChartViewRoo
     setItemsContainerWidth(width + scrollContainer?.scrollLeft);
   };
 
-  const updateCurrentLeftScrollPosition = (width: number) => {
-    const scrollContainer = document.querySelector("#gantt-container") as HTMLDivElement;
-    if (!scrollContainer) return;
-
-    scrollContainer.scrollLeft = width + scrollContainer?.scrollLeft;
-  };
-
   const handleScrollToCurrentSelectedDate = (currentState: ChartDataType, date: Date) => {
     const scrollContainer = document.querySelector("#gantt-container") as HTMLDivElement;
     if (!scrollContainer) return;
@@ -195,29 +193,31 @@ export const ChartViewRoot = observer(function ChartViewRoot(props: ChartViewRoo
         loaderTitle={loaderTitle}
         showToday={showToday}
       />
-      <GanttChartMainContent
-        blockIds={blockIds}
-        loadMoreBlocks={loadMoreBlocks}
-        canLoadMoreBlocks={canLoadMoreBlocks}
-        blockToRender={blockToRender}
-        blockUpdateHandler={blockUpdateHandler}
-        bottomSpacing={bottomSpacing}
-        enableBlockLeftResize={enableBlockLeftResize}
-        enableBlockMove={enableBlockMove}
-        enableBlockRightResize={enableBlockRightResize}
-        enableReorder={enableReorder}
-        enableSelection={enableSelection}
-        enableAddBlock={enableAddBlock}
-        enableDependency={enableDependency}
-        itemsContainerWidth={itemsContainerWidth}
-        showAllBlocks={showAllBlocks}
-        sidebarToRender={sidebarToRender}
-        title={title}
-        updateCurrentViewRenderPayload={updateCurrentViewRenderPayload}
-        quickAdd={quickAdd}
-        updateBlockDates={updateBlockDates}
-        isEpic={isEpic}
-      />
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+        <GanttChartMainContent
+          blockIds={blockIds}
+          loadMoreBlocks={loadMoreBlocks}
+          canLoadMoreBlocks={canLoadMoreBlocks}
+          blockToRender={blockToRender}
+          blockUpdateHandler={blockUpdateHandler}
+          bottomSpacing={bottomSpacing}
+          enableBlockLeftResize={enableBlockLeftResize}
+          enableBlockMove={enableBlockMove}
+          enableBlockRightResize={enableBlockRightResize}
+          enableReorder={enableReorder}
+          enableSelection={enableSelection}
+          enableAddBlock={enableAddBlock}
+          enableDependency={enableDependency}
+          itemsContainerWidth={itemsContainerWidth}
+          showAllBlocks={showAllBlocks}
+          sidebarToRender={sidebarToRender}
+          title={title}
+          updateCurrentViewRenderPayload={updateCurrentViewRenderPayload}
+          quickAdd={quickAdd}
+          updateBlockDates={updateBlockDates}
+          isEpic={isEpic}
+        />
+      </div>
     </div>
   );
 

@@ -79,6 +79,7 @@ from .workspace.user import (
 )
 
 from .workspace.work_report import WorkspaceWorkReportDetailEndpoint, WorkspaceWorkReportEndpoint
+from .workspace.daily_team_digest import WorkspaceDailyTeamDigestEndpoint
 from .workspace.estimate import WorkspaceEstimatesEndpoint
 from .workspace.module import WorkspaceModulesEndpoint
 from .workspace.cycle import WorkspaceCyclesEndpoint
