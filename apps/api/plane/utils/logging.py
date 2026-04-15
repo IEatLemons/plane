@@ -5,6 +5,41 @@
 import logging.handlers as handlers
 import time
 
+from pythonjsonlogger.jsonlogger import JsonFormatter
+
+
+DEFAULT_JSON_FMT = "%(levelname)s %(asctime)s %(module)s %(name)s %(message)s"
+
+
+class PlaneJsonFormatter(JsonFormatter):
+    """
+    Single-line JSON for containers and log aggregators: UTC timestamp field,
+    common `level` / `logger` keys, and UTF-8 text without unnecessary escaping.
+    `extra={...}` on log calls is merged into the JSON by python-json-logger.
+    """
+
+    def __init__(
+        self,
+        fmt: str | None = None,
+        datefmt: str | None = None,
+        *,
+        timestamp: bool | str = True,
+        rename_fields: dict[str, str] | None = None,
+        json_ensure_ascii: bool = False,
+        **kwargs,
+    ) -> None:
+        merged_rename = {"levelname": "level", "name": "logger"}
+        if rename_fields:
+            merged_rename.update(rename_fields)
+        super().__init__(
+            fmt or DEFAULT_JSON_FMT,
+            datefmt,
+            timestamp=timestamp,
+            rename_fields=merged_rename,
+            json_ensure_ascii=json_ensure_ascii,
+            **kwargs,
+        )
+
 
 class SizedTimedRotatingFileHandler(handlers.TimedRotatingFileHandler):
     """

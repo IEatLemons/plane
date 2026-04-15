@@ -43,7 +43,7 @@ LOGGING = {
     "formatters": {
         "verbose": {"format": "%(asctime)s [%(process)d] %(levelname)s %(name)s: %(message)s"},
         "json": {
-            "()": "pythonjsonlogger.jsonlogger.JsonFormatter",
+            "()": "plane.utils.logging.PlaneJsonFormatter",
             "fmt": "%(levelname)s %(asctime)s %(module)s %(name)s %(message)s",
         },
     },
@@ -52,6 +52,7 @@ LOGGING = {
             "class": "logging.StreamHandler",
             "formatter": "json",
             "level": "INFO",
+            "stream": "ext://sys.stdout",
         },
         "file": {
             "class": "plane.utils.logging.SizedTimedRotatingFileHandler",

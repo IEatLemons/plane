@@ -59,7 +59,7 @@ LOGGING = {
             "style": "{",
         },
         "json": {
-            "()": "pythonjsonlogger.jsonlogger.JsonFormatter",
+            "()": "plane.utils.logging.PlaneJsonFormatter",
             "fmt": "%(levelname)s %(asctime)s %(module)s %(name)s %(message)s",
         },
         "sql": {
@@ -72,11 +72,13 @@ LOGGING = {
             "level": "DEBUG",
             "class": "logging.StreamHandler",
             "formatter": "json",
+            "stream": "ext://sys.stdout",
         },
         "sql_console": {
             "level": "DEBUG",
             "class": "logging.StreamHandler",
             "formatter": "sql",
+            "stream": "ext://sys.stdout",
         },
     },
     "loggers": {

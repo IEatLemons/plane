@@ -3,17 +3,18 @@
 # See the LICENSE file for details.
 
 # Python imports
-import os
 import logging
+import os
+import sys
 
 # Third party imports
 from celery import Celery
-from pythonjsonlogger.jsonlogger import JsonFormatter
-from celery.signals import after_setup_logger, after_setup_task_logger
 from celery.schedules import crontab
+from celery.signals import after_setup_logger, after_setup_task_logger
 
 # Module imports
 from plane.settings.redis import redis_instance
+from plane.utils.logging import PlaneJsonFormatter
 
 # Set the default Django settings module for the 'celery' program.
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "plane.settings.production")
@@ -83,16 +84,16 @@ app.conf.beat_schedule = {
 # Setup logging
 @after_setup_logger.connect
 def setup_loggers(logger, *args, **kwargs):
-    formatter = JsonFormatter('"%(levelname)s %(asctime)s %(module)s %(name)s %(message)s')
-    handler = logging.StreamHandler()
+    formatter = PlaneJsonFormatter()
+    handler = logging.StreamHandler(stream=sys.stdout)
     handler.setFormatter(fmt=formatter)
     logger.addHandler(handler)
 
 
 @after_setup_task_logger.connect
 def setup_task_loggers(logger, *args, **kwargs):
-    formatter = JsonFormatter('"%(levelname)s %(asctime)s %(module)s %(name)s %(message)s')
-    handler = logging.StreamHandler()
+    formatter = PlaneJsonFormatter()
+    handler = logging.StreamHandler(stream=sys.stdout)
     handler.setFormatter(fmt=formatter)
     logger.addHandler(handler)
 
