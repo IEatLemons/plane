@@ -4,6 +4,8 @@
  * See the LICENSE file for details.
  */
 
+import { SidebarWorkspaceMenu } from "@/components/workspace/sidebar/workspace-menu";
+
 export function DesktopSidebarWorkspaceMenu() {
-  return null;
+  return <SidebarWorkspaceMenu />;
 }
