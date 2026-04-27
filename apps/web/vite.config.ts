@@ -18,9 +18,13 @@ const rollupMaxParallelFileOps = (() => {
   return Number.isFinite(n) && n > 0 ? n : undefined;
 })();
 
+const isCI = process.env.CI === "1" || process.env.CI === "true";
+
 export default defineConfig(() => ({
   build: {
     assetsInlineLimit: 0,
+    // Gzip size reporting is extra work and RSS during the Rollup build; skip in CI/Docker.
+    reportCompressedSize: !isCI,
     rollupOptions: {
       // Lowers peak RSS during chunk rendering; set ROLLUP_MAX_PARALLEL_FILE_OPS in Docker/CI if builds OOM.
       ...(rollupMaxParallelFileOps !== undefined ? { maxParallelFileOps: rollupMaxParallelFileOps } : {}),

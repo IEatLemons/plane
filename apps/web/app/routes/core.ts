@@ -146,6 +146,11 @@ export const coreRoutes: RouteConfigEntry[] = [
               ":workspaceSlug/projects/:projectId/issues",
               "./(all)/[workspaceSlug]/(projects)/projects/(detail)/[projectId]/issues/(list)/page.tsx"
             ),
+            // Static segment before :issueId, otherwise "batch-import" is matched as an issue id.
+            route(
+              ":workspaceSlug/projects/:projectId/issues/batch-import",
+              "./(all)/[workspaceSlug]/(projects)/projects/(detail)/[projectId]/issues/(list)/batch-import/page.tsx"
+            ),
           ]),
           // Issue Detail
           route(

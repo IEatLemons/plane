@@ -6,12 +6,13 @@
 
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
+import { differenceInCalendarDays } from "date-fns/differenceInCalendarDays";
 // plane imports
 import { Popover } from "@plane/propel/popover";
 import { Tooltip } from "@plane/propel/tooltip";
 import { ControlLink } from "@plane/ui";
 import { EIssuesStoreType } from "@plane/types";
-import { findTotalDaysInRange, generateWorkItemLink, getStableProjectAccentColor } from "@plane/utils";
+import { findTotalDaysInRange, generateWorkItemLink, getDate, getStableProjectAccentColor } from "@plane/utils";
 // components
 import { SIDEBAR_WIDTH } from "@/components/gantt-chart/constants";
 import { MemberBoringAvatar } from "@/components/member/member-boring-avatar";
@@ -23,6 +24,7 @@ import { useProjectState } from "@/hooks/store/use-project-state";
 import { useIssueStoreType } from "@/hooks/use-issue-layout-store";
 import useIssuePeekOverviewRedirection from "@/hooks/use-issue-peek-overview-redirection";
 import { usePlatformOS } from "@/hooks/use-platform-os";
+import { useTimeLineChartStore } from "@/hooks/use-timeline-chart";
 // plane web imports
 import { IssueStats } from "@/plane-web/components/issues/issue-layouts/issue-stats";
 import { useGanttAssigneeTailDisplay } from "./gantt-assignee-display-context";
@@ -60,6 +62,7 @@ export const IssueGanttBlock = observer(function IssueGanttBlock(props: Props) {
   // hooks
   const { isMobile } = usePlatformOS();
   const { handleRedirection } = useIssuePeekOverviewRedirection(isEpic);
+  const { currentViewData } = useTimeLineChartStore();
 
   // derived values
   const issueDetails = getIssueById(issueId);
@@ -71,6 +74,28 @@ export const IssueGanttBlock = observer(function IssueGanttBlock(props: Props) {
   const handleIssuePeekOverview = () => handleRedirection(workspaceSlug, issueDetails, isMobile);
 
   const duration = findTotalDaysInRange(issueDetails?.start_date, issueDetails?.target_date) || 0;
+
+  const stateGroup = issueDetails?.state__group;
+  const eligible = issueDetails?.sub_issues_eligible_count ?? issueDetails?.sub_issues_count ?? 0;
+  const doneCount = issueDetails?.sub_issues_done_count ?? 0;
+  const subProgressPct = eligible > 0 ? Math.min(100, Math.round((doneCount / eligible) * 100)) : 0;
+  const showSubProgress = (issueDetails?.sub_issues_count ?? 0) > 0;
+
+  const dayWidth = currentViewData?.data.dayWidth;
+  let overdueWidthPx = 0;
+  if (dayWidth && issueDetails?.target_date && stateGroup && stateGroup !== "completed" && stateGroup !== "cancelled") {
+    const target = getDate(issueDetails.target_date);
+    if (target) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      target.setHours(0, 0, 0, 0);
+      const daysPastDue = differenceInCalendarDays(today, target);
+      if (daysPastDue >= 0) {
+        const spanDays = daysPastDue === 0 ? 1 : daysPastDue;
+        overdueWidthPx = spanDays * dayWidth;
+      }
+    }
+  }
 
   const showProjectContextOnBar = MULTI_PROJECT_GANTT_STORE_TYPES.has(storeType as EIssuesStoreType);
   const projectAccentColor =
@@ -85,44 +110,65 @@ export const IssueGanttBlock = observer(function IssueGanttBlock(props: Props) {
       <Popover.Button
         className="w-full"
         render={
-          <button
-            type="button"
-            id={`issue-${issueId}`}
-            className="relative flex h-full w-full cursor-pointer flex-col items-stretch overflow-hidden rounded-sm border-0 p-0 text-left font-[inherit]"
-            style={blockStyle}
-            onClick={handleIssuePeekOverview}
-          >
-            {projectAccentColor && (
-              <div
-                aria-hidden
-                className="h-[3px] w-full shrink-0 rounded-t-sm"
-                style={{ backgroundColor: projectAccentColor }}
-              />
-            )}
-            <div className="relative flex min-h-0 min-w-0 flex-1 items-stretch overflow-hidden">
-              <div className="absolute top-0 left-0 h-full w-full bg-surface-1/50" />
-              <div
-                className="relative sticky z-[1] flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden px-2.5 py-1 text-13"
-                style={{ left: `${SIDEBAR_WIDTH}px` }}
-              >
-                <span className="min-w-0 flex-1 truncate text-primary">{issueDetails?.name}</span>
-                {isEpic && (
-                  <IssueStats
-                    issueId={issueId}
-                    className="sticky mx-2 w-auto flex-shrink-0 justify-end truncate overflow-hidden font-medium text-primary"
-                    showProgressText={duration >= 2}
+          <div className="relative h-full w-full overflow-visible">
+            <button
+              type="button"
+              id={`issue-${issueId}`}
+              className="relative flex h-full w-full cursor-pointer flex-col items-stretch overflow-hidden rounded-sm border-0 p-0 text-left font-[inherit]"
+              style={blockStyle}
+              onClick={handleIssuePeekOverview}
+            >
+              {projectAccentColor && (
+                <div
+                  aria-hidden
+                  className="h-[3px] w-full shrink-0 rounded-t-sm"
+                  style={{ backgroundColor: projectAccentColor }}
+                />
+              )}
+              <div className="relative flex min-h-0 min-w-0 flex-1 items-stretch overflow-hidden">
+                {showSubProgress && (
+                  <div
+                    aria-hidden
+                    className="absolute top-0 left-0 z-0 h-full bg-black/20"
+                    style={{ width: `${subProgressPct}%` }}
                   />
                 )}
-                {showAssigneeTail && firstAssigneeId && (
-                  <Tooltip tooltipContent={assigneeMember?.display_name ?? ""} isMobile={isMobile}>
-                    <span className="flex shrink-0">
-                      <MemberBoringAvatar seed={firstAssigneeId} avatarUrl={assigneeMember?.avatar_url} size={18} />
+                <div className="absolute top-0 left-0 z-0 h-full w-full bg-surface-1/50" />
+                <div
+                  className="relative sticky z-[1] flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden px-2.5 py-1 text-13"
+                  style={{ left: `${SIDEBAR_WIDTH}px` }}
+                >
+                  <span className="min-w-0 flex-1 truncate text-primary">{issueDetails?.name}</span>
+                  {showSubProgress && (
+                    <span className="shrink-0 text-11 font-medium text-primary tabular-nums">
+                      {doneCount}/{eligible}
                     </span>
-                  </Tooltip>
-                )}
+                  )}
+                  {isEpic && (
+                    <IssueStats
+                      issueId={issueId}
+                      className="sticky mx-2 w-auto flex-shrink-0 justify-end truncate overflow-hidden font-medium text-primary"
+                      showProgressText={duration >= 2}
+                    />
+                  )}
+                  {showAssigneeTail && firstAssigneeId && (
+                    <Tooltip tooltipContent={assigneeMember?.display_name ?? ""} isMobile={isMobile}>
+                      <span className="flex shrink-0">
+                        <MemberBoringAvatar seed={firstAssigneeId} avatarUrl={assigneeMember?.avatar_url} size={18} />
+                      </span>
+                    </Tooltip>
+                  )}
+                </div>
               </div>
-            </div>
-          </button>
+            </button>
+            {overdueWidthPx > 0 && (
+              <div
+                aria-hidden
+                className="bg-red-500/85 pointer-events-none absolute top-0 left-full z-[2] h-full rounded-sm rounded-l-none"
+                style={{ width: overdueWidthPx }}
+              />
+            )}
+          </div>
         }
       />
       <Popover.Panel side="bottom" align="start">

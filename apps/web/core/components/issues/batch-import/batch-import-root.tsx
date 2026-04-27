@@ -27,16 +27,29 @@ import { useProjectState } from "@/hooks/store/use-project-state";
 import { useUserPermissions } from "@/hooks/store/user";
 
 const SAMPLE_JSON = `{
+  "schedule": {
+    "mode": "sequential",
+    "step_days": 1,
+    "duration_days": 2
+  },
   "items": [
     {
-      "name": "示例：修复登录页样式",
-      "description_html": "<p>可选说明</p>",
+      "import_key": "milestone-design",
+      "name": "示例：设计阶段",
       "priority": "high"
     },
     {
-      "name": "示例：补充单元测试",
-      "description_html": "<p></p>",
-      "priority": "none"
+      "import_key": "task-ui",
+      "parent_import_key": "milestone-design",
+      "name": "示例：登录页样式",
+      "description_html": "<p>子工作项</p>"
+    },
+    {
+      "name": "示例：嵌套导入",
+      "children": [
+        { "name": "子项 A" },
+        { "name": "子项 B", "priority": "low" }
+      ]
     }
   ]
 }`;
@@ -70,6 +83,7 @@ export const BatchImportRoot = observer(function BatchImportRoot(props: Props) {
   const [parseError, setParseError] = useState<string | null>(null);
   const [rows, setRows] = useState<DraftRow[]>([]);
   const [publishing, setPublishing] = useState(false);
+  const [applyScheduleFromJson, setApplyScheduleFromJson] = useState(true);
 
   useEffect(() => {
     void fetchProjectStates(workspaceSlug, projectId);
@@ -84,7 +98,7 @@ export const BatchImportRoot = observer(function BatchImportRoot(props: Props) {
 
   const handleParse = useCallback(() => {
     setParseError(null);
-    const result = parseBatchIssueJson(jsonText);
+    const result = parseBatchIssueJson(jsonText, { applySchedule: applyScheduleFromJson });
     if (!result.ok) {
       setParseError(result.error);
       setRows([]);
@@ -97,7 +111,7 @@ export const BatchImportRoot = observer(function BatchImportRoot(props: Props) {
         skip: false,
       }))
     );
-  }, [jsonText]);
+  }, [jsonText, applyScheduleFromJson]);
 
   const updateDraft = useCallback((key: string, patch: Partial<TBatchIssueDraft>) => {
     setRows((prev) => prev.map((r) => (r.key === key ? { ...r, draft: { ...r.draft, ...patch } } : r)));
@@ -145,6 +159,7 @@ export const BatchImportRoot = observer(function BatchImportRoot(props: Props) {
 
     setPublishing(true);
     try {
+      const importKeyToId = new Map<string, string>();
       /* Sequential creation: stop on first API error and preserve predictable order. */
       for (let i = 0; i < toCreate.length; i++) {
         const { draft } = toCreate[i];
@@ -158,10 +173,35 @@ export const BatchImportRoot = observer(function BatchImportRoot(props: Props) {
           });
           return;
         }
+        if (draft.parent_import_key) {
+          const resolved = importKeyToId.get(draft.parent_import_key);
+          if (!resolved) {
+            setPublishing(false);
+            setToast({
+              type: TOAST_TYPE.ERROR,
+              title: t("common.error.label"),
+              message: t("issue_batch_import.missing_parent_import_key", {
+                key: draft.parent_import_key,
+              }),
+            });
+            return;
+          }
+          const merged = mergeBatchDraftForCreate({ ...draft, name }, defaultStateId, resolved);
+          const payload = createIssuePayload(projectId, merged);
+          // eslint-disable-next-line no-await-in-loop -- must await each create in order
+          const created = await issues.createIssue(workspaceSlug, projectId, payload);
+          if (draft.import_key) {
+            importKeyToId.set(draft.import_key, created.id);
+          }
+          continue;
+        }
         const merged = mergeBatchDraftForCreate({ ...draft, name }, defaultStateId);
         const payload = createIssuePayload(projectId, merged);
         // eslint-disable-next-line no-await-in-loop -- must await each create in order
-        await issues.createIssue(workspaceSlug, projectId, payload);
+        const created = await issues.createIssue(workspaceSlug, projectId, payload);
+        if (draft.import_key) {
+          importKeyToId.set(draft.import_key, created.id);
+        }
       }
       setToast({
         type: TOAST_TYPE.SUCCESS,
@@ -228,6 +268,10 @@ export const BatchImportRoot = observer(function BatchImportRoot(props: Props) {
           placeholder={t("issue_batch_import.json_placeholder")}
         />
         {parseError ? <p className="text-red-500 text-12">{parseError}</p> : null}
+        <label className="flex cursor-pointer items-center gap-2 text-12 text-secondary">
+          <input type="checkbox" checked={applyScheduleFromJson} onChange={() => setApplyScheduleFromJson((v) => !v)} />
+          {t("issue_batch_import.apply_schedule_checkbox")}
+        </label>
         <div>
           <Button type="button" variant="secondary" onClick={handleParse}>
             {t("issue_batch_import.parse")}
@@ -270,6 +314,36 @@ export const BatchImportRoot = observer(function BatchImportRoot(props: Props) {
                       onChange={(e) => updateDraft(row.key, { description_html: e.target.value })}
                     />
                   </label>
+                  {(row.draft.import_key || row.draft.parent_import_key || row.draft.parent_id) && (
+                    <div className="flex flex-wrap gap-3 text-12 text-tertiary">
+                      {row.draft.import_key ? (
+                        <span>
+                          {t("issue_batch_import.import_key_label")}: {row.draft.import_key}
+                        </span>
+                      ) : null}
+                      {row.draft.parent_import_key ? (
+                        <span>
+                          {t("issue_batch_import.parent_import_key_label")}: {row.draft.parent_import_key}
+                        </span>
+                      ) : null}
+                      {row.draft.parent_id ? (
+                        <span>
+                          {t("issue_batch_import.parent_id_label")}: {row.draft.parent_id}
+                        </span>
+                      ) : null}
+                    </div>
+                  )}
+                  {(row.draft.start_date || row.draft.target_date) && (
+                    <div className="text-12 text-tertiary">
+                      {row.draft.start_date
+                        ? `${t("issue_batch_import.start_date_label")}: ${row.draft.start_date}`
+                        : ""}
+                      {row.draft.start_date && row.draft.target_date ? " · " : ""}
+                      {row.draft.target_date
+                        ? `${t("issue_batch_import.target_date_label")}: ${row.draft.target_date}`
+                        : ""}
+                    </div>
+                  )}
                   <div className="flex flex-wrap gap-2">
                     <div className="h-7">
                       <StateDropdown

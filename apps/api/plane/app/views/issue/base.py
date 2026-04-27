@@ -72,6 +72,7 @@ from plane.utils.host import base_host
 from plane.utils.issue_filters import issue_filters
 from plane.utils.order_queryset import order_issue_queryset
 from plane.utils.paginator import GroupedOffsetPaginator, SubGroupedOffsetPaginator
+from plane.utils.sub_issue_progress import get_sub_issue_progress_annotations
 from plane.utils.timezone_converter import user_timezone_converter
 
 from .. import BaseAPIView, BaseViewSet
@@ -134,6 +135,7 @@ class IssueListEndpoint(BaseAPIView):
                 .annotate(count=Func(F("id"), function="Count"))
                 .values("count")
             )
+            .annotate(**get_sub_issue_progress_annotations())
             .distinct()
         )
 
@@ -177,6 +179,8 @@ class IssueListEndpoint(BaseAPIView):
                 "label_ids",
                 "assignee_ids",
                 "sub_issues_count",
+                "sub_issues_done_count",
+                "sub_issues_eligible_count",
                 "created_at",
                 "updated_at",
                 "created_by",
@@ -244,6 +248,7 @@ class IssueViewSet(BaseViewSet):
                     .values("count")
                 )
             )
+            .annotate(**get_sub_issue_progress_annotations())
         )
 
         return issues
@@ -442,6 +447,8 @@ class IssueViewSet(BaseViewSet):
                     "label_ids",
                     "assignee_ids",
                     "sub_issues_count",
+                    "sub_issues_done_count",
+                    "sub_issues_eligible_count",
                     "created_at",
                     "updated_at",
                     "created_by",
@@ -515,6 +522,7 @@ class IssueViewSet(BaseViewSet):
                     .values("count")
                 )
             )
+            .annotate(**get_sub_issue_progress_annotations())
             .annotate(
                 label_ids=Coalesce(
                     Subquery(
@@ -837,6 +845,7 @@ class IssuePaginatedViewSet(BaseViewSet):
                     .values("count")
                 )
             )
+            .annotate(**get_sub_issue_progress_annotations())
         )
 
     def process_paginated_result(self, fields, results, timezone):
@@ -882,6 +891,8 @@ class IssuePaginatedViewSet(BaseViewSet):
             "link_count",
             "attachment_count",
             "sub_issues_count",
+            "sub_issues_done_count",
+            "sub_issues_eligible_count",
         ]
 
         if str(is_description_required).lower() == "true":
@@ -991,6 +1002,7 @@ class IssueDetailEndpoint(BaseAPIView):
                 .annotate(count=Func(F("id"), function="Count"))
                 .values("count")
             )
+            .annotate(**get_sub_issue_progress_annotations())
             .prefetch_related(
                 Prefetch(
                     "issue_assignee",
@@ -1244,6 +1256,7 @@ class IssueDetailIdentifierEndpoint(BaseAPIView):
                 .annotate(count=Func(F("id"), function="Count"))
                 .values("count")
             )
+            .annotate(**get_sub_issue_progress_annotations())
             .filter(sequence_id=issue_identifier)
             .annotate(
                 label_ids=Coalesce(

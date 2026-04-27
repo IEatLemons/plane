@@ -7,3 +7,7 @@ from django.apps import AppConfig
 
 class AppApiConfig(AppConfig):
     name = "plane.app"
+
+    def ready(self):
+        super().ready()
+        import plane.app.signals  # noqa: F401

@@ -118,6 +118,8 @@ def issue_on_results(
         "parent_id",
         "cycle_id",
         "sub_issues_count",
+        "sub_issues_done_count",
+        "sub_issues_eligible_count",
         "created_at",
         "updated_at",
         "created_by",

@@ -1,4 +1,3 @@
-# syntax=docker/dockerfile:1.7
 FROM node:22-alpine AS base
 
 # Setup pnpm package manager with corepack and configure global bin directory for caching
@@ -45,9 +44,15 @@ RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store CI=true pnpm install --o
 
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV TURBO_TELEMETRY_DISABLED=1
-# Web production build (Vite/Rollup) can exceed default Docker memory during "rendering chunks".
-# Tune host: Docker Desktop → Resources → Memory (often need 8 GiB+). These reduce peak RSS:
-ENV ROLLUP_MAX_PARALLEL_FILE_OPS=4
+ENV CI=1
+# Web production build (Vite/Rollup) is memory-heavy. If the build is SIGKILL/137 or "cannot allocate
+# memory", increase Docker / buildkit memory (often 6–8 GiB+) and/or override these:
+#   --build-arg WEB_NODE_MAX_MB=4096
+# Rollup: lower = less parallel chunk I/O, lower peak RSS.
+ENV ROLLUP_MAX_PARALLEL_FILE_OPS=1
+# Cap V8 heap so the Node process is less likely to push the whole container over the cgroup limit.
+ARG WEB_NODE_MAX_MB=2048
+ENV NODE_OPTIONS=--max-old-space-size=${WEB_NODE_MAX_MB}
 
 RUN pnpm turbo run build --filter=web --concurrency=1
 

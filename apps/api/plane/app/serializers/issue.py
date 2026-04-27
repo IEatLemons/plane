@@ -731,6 +731,8 @@ class IssueStateSerializer(DynamicBaseSerializer):
     project_detail = ProjectLiteSerializer(read_only=True, source="project")
     assignee_details = UserLiteSerializer(read_only=True, source="assignees", many=True)
     sub_issues_count = serializers.IntegerField(read_only=True)
+    sub_issues_done_count = serializers.IntegerField(read_only=True, required=False)
+    sub_issues_eligible_count = serializers.IntegerField(read_only=True, required=False)
     attachment_count = serializers.IntegerField(read_only=True)
     link_count = serializers.IntegerField(read_only=True)
 
@@ -768,6 +770,8 @@ class IssueSerializer(DynamicBaseSerializer):
 
     # Count items
     sub_issues_count = serializers.IntegerField(read_only=True)
+    sub_issues_done_count = serializers.IntegerField(read_only=True, required=False)
+    sub_issues_eligible_count = serializers.IntegerField(read_only=True, required=False)
     attachment_count = serializers.IntegerField(read_only=True)
     link_count = serializers.IntegerField(read_only=True)
 
@@ -791,6 +795,8 @@ class IssueSerializer(DynamicBaseSerializer):
             "label_ids",
             "assignee_ids",
             "sub_issues_count",
+            "sub_issues_done_count",
+            "sub_issues_eligible_count",
             "created_at",
             "updated_at",
             "created_by",
@@ -855,6 +861,8 @@ class IssueListDetailSerializer(serializers.Serializer):
             "label_ids": self.get_label_ids(instance),
             "assignee_ids": self.get_assignee_ids(instance),
             "sub_issues_count": instance.sub_issues_count,
+            "sub_issues_done_count": getattr(instance, "sub_issues_done_count", 0),
+            "sub_issues_eligible_count": getattr(instance, "sub_issues_eligible_count", 0),
             "attachment_count": instance.attachment_count,
             "link_count": instance.link_count,
         }

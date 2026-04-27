@@ -55,6 +55,10 @@ export type TBaseIssue = {
   estimate_point: string | null;
 
   sub_issues_count: number;
+  /** Direct children in completed state (API-annotated on list/detail). */
+  sub_issues_done_count?: number;
+  /** Direct children excluding cancelled; denominator for sub-issue progress. */
+  sub_issues_eligible_count?: number;
   attachment_count: number;
   link_count: number;
 
