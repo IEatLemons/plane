@@ -10,15 +10,13 @@ from .common import *  # noqa
 
 DEBUG = True
 
-# Admin Vite (e.g. :3001) and API (:8000) are different sites. With the default
-# SameSite=Lax, browsers do not attach session cookies to credentialed XHR/fetch
-# from the admin origin to the API, so sign-up/sign-in succeed (302) but
-# GET /api/instances/admins/me/ returns 401. None requires Secure; localhost is
-# treated as a secure context for Secure cookies in Chromium/Firefox.
+# Admin (e.g. :3001) and API (:8000) are different sites — need cross-origin cookies.
+# SameSite=Lax does not attach cookies on credentialed XHR from admin → API.
 SESSION_COOKIE_SAMESITE = "None"
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SAMESITE = "None"
 CSRF_COOKIE_SECURE = True
+# Chromium treats http://localhost as trustworthy for Secure + SameSite=None cookies.
 
 # Debug Toolbar settings
 INSTALLED_APPS += ("debug_toolbar",)  # noqa

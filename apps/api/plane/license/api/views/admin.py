@@ -160,26 +160,27 @@ class InstanceAdminSignUpEndpoint(View):
             )
             return HttpResponseRedirect(url)
 
-        # Check if already a user exists or not
-        # Existing user
-        if User.objects.filter(email=email).exists():
-            exc = AuthenticationException(
-                error_code=AUTHENTICATION_ERROR_CODES["ADMIN_USER_ALREADY_EXIST"],
-                error_message="ADMIN_USER_ALREADY_EXIST",
-                payload={
-                    "email": email,
-                    "first_name": first_name,
-                    "last_name": last_name,
-                    "company_name": company_name,
-                    "is_telemetry_enabled": is_telemetry_enabled,
-                },
-            )
-            url = urljoin(
-                base_host(request=request, is_admin=True),
-                "?" + urlencode(exc.get_error_dict()),
-            )
-            return HttpResponseRedirect(url)
-        else:
+        # Existing user (e.g. partial / interrupted signup left a User row without InstanceAdmin)
+        existing_user = User.objects.filter(email=email).first()
+        if existing_user:
+            if InstanceAdmin.objects.filter(user=existing_user, instance=instance).exists():
+                exc = AuthenticationException(
+                    error_code=AUTHENTICATION_ERROR_CODES["ADMIN_USER_ALREADY_EXIST"],
+                    error_message="ADMIN_USER_ALREADY_EXIST",
+                    payload={
+                        "email": email,
+                        "first_name": first_name,
+                        "last_name": last_name,
+                        "company_name": company_name,
+                        "is_telemetry_enabled": is_telemetry_enabled,
+                    },
+                )
+                url = urljoin(
+                    base_host(request=request, is_admin=True),
+                    "?" + urlencode(exc.get_error_dict()),
+                )
+                return HttpResponseRedirect(url)
+
             results = zxcvbn(password)
             if results["score"] < 3:
                 exc = AuthenticationException(
@@ -199,37 +200,98 @@ class InstanceAdminSignUpEndpoint(View):
                 )
                 return HttpResponseRedirect(url)
 
-            user = User(
-                first_name=first_name,
-                last_name=last_name,
-                email=email,
-                username=uuid.uuid4().hex,
-                is_password_autoset=False,
-            )
-            user.set_password(password)
-            user.save()
-            _ = Profile.objects.create(user=user, company_name=company_name)
-            # settings last active for the user
-            user.is_active = True
-            user.last_active = timezone.now()
-            user.last_login_time = timezone.now()
-            user.last_login_ip = get_client_ip(request=request)
-            user.last_login_uagent = request.META.get("HTTP_USER_AGENT")
-            user.token_updated_at = timezone.now()
-            user.save()
+            if not existing_user.check_password(password):
+                exc = AuthenticationException(
+                    error_code=AUTHENTICATION_ERROR_CODES["ADMIN_AUTHENTICATION_FAILED"],
+                    error_message="ADMIN_AUTHENTICATION_FAILED",
+                    payload={
+                        "email": email,
+                        "first_name": first_name,
+                        "last_name": last_name,
+                        "company_name": company_name,
+                        "is_telemetry_enabled": is_telemetry_enabled,
+                    },
+                )
+                url = urljoin(
+                    base_host(request=request, is_admin=True),
+                    "?" + urlencode(exc.get_error_dict()),
+                )
+                return HttpResponseRedirect(url)
 
-            # Register the user as an instance admin
-            _ = InstanceAdmin.objects.create(user=user, instance=instance)
-            # Make the setup flag True
+            existing_user.first_name = first_name
+            existing_user.last_name = last_name
+            existing_user.is_active = True
+            existing_user.last_active = timezone.now()
+            existing_user.last_login_time = timezone.now()
+            existing_user.last_login_ip = get_client_ip(request=request)
+            existing_user.last_login_uagent = request.META.get("HTTP_USER_AGENT")
+            existing_user.token_updated_at = timezone.now()
+            existing_user.save()
+
+            profile, _ = Profile.objects.get_or_create(user=existing_user)
+            profile.company_name = company_name
+            profile.save()
+
+            _ = InstanceAdmin.objects.create(user=existing_user, instance=instance)
             instance.is_setup_done = True
             instance.instance_name = company_name
             instance.is_telemetry_enabled = is_telemetry_enabled
             instance.save()
 
-            # get tokens for user
-            user_login(request=request, user=user, is_admin=True)
+            user_login(request=request, user=existing_user, is_admin=True)
             url = urljoin(base_host(request=request, is_admin=True), "general/")
             return HttpResponseRedirect(url)
+
+        results = zxcvbn(password)
+        if results["score"] < 3:
+            exc = AuthenticationException(
+                error_code=AUTHENTICATION_ERROR_CODES["PASSWORD_TOO_WEAK"],
+                error_message="PASSWORD_TOO_WEAK",
+                payload={
+                    "email": email,
+                    "first_name": first_name,
+                    "last_name": last_name,
+                    "company_name": company_name,
+                    "is_telemetry_enabled": is_telemetry_enabled,
+                },
+            )
+            url = urljoin(
+                base_host(request=request, is_admin=True),
+                "?" + urlencode(exc.get_error_dict()),
+            )
+            return HttpResponseRedirect(url)
+
+        user = User(
+            first_name=first_name,
+            last_name=last_name,
+            email=email,
+            username=uuid.uuid4().hex,
+            is_password_autoset=False,
+        )
+        user.set_password(password)
+        user.save()
+        _ = Profile.objects.create(user=user, company_name=company_name)
+        # settings last active for the user
+        user.is_active = True
+        user.last_active = timezone.now()
+        user.last_login_time = timezone.now()
+        user.last_login_ip = get_client_ip(request=request)
+        user.last_login_uagent = request.META.get("HTTP_USER_AGENT")
+        user.token_updated_at = timezone.now()
+        user.save()
+
+        # Register the user as an instance admin
+        _ = InstanceAdmin.objects.create(user=user, instance=instance)
+        # Make the setup flag True
+        instance.is_setup_done = True
+        instance.instance_name = company_name
+        instance.is_telemetry_enabled = is_telemetry_enabled
+        instance.save()
+
+        # get tokens for user
+        user_login(request=request, user=user, is_admin=True)
+        url = urljoin(base_host(request=request, is_admin=True), "general/")
+        return HttpResponseRedirect(url)
 
 
 class InstanceAdminSignInEndpoint(View):

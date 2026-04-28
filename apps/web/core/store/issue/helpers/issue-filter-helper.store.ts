@@ -68,7 +68,7 @@ export interface IIssueFilterHelperStore {
 }
 
 export class IssueFilterHelperStore implements IIssueFilterHelperStore {
-  constructor() {}
+  
 
   /**
    * @description This method is used to apply the display filters on the issues
@@ -118,6 +118,9 @@ export class IssueFilterHelperStore implements IIssueFilterHelperStore {
     if (richFilters) issueFiltersParams.filters = JSON.stringify(richFilters);
 
     if (displayFilters?.layout) issueFiltersParams.layout = displayFilters?.layout;
+
+    // Gantt no longer exposes sub_issue in display extra_options; force API param regardless of acceptable keys.
+    if (displayFilters?.layout === EIssueLayoutTypes.GANTT) issueFiltersParams.sub_issue = false;
 
     if (ENABLE_ISSUE_DEPENDENCIES && displayFilters?.layout === EIssueLayoutTypes.GANTT)
       issueFiltersParams["expand"] = "issue_relation,issue_related";

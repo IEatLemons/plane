@@ -87,6 +87,9 @@ export const IssueGanttSidebar = observer(function IssueGanttSidebar(props: Prop
             // hide the block if it doesn't have start and target dates and showAllBlocks is false
             if (!block || (!showAllBlocks && !isBlockVisibleOnSidebar)) return;
 
+            const isSubIssueRow = Boolean(block?.data?.parent_id);
+            const dragEnabled = enableReorder && !isSubIssueRow;
+
             return (
               <RenderIfVisible
                 key={block.id}
@@ -99,7 +102,7 @@ export const IssueGanttSidebar = observer(function IssueGanttSidebar(props: Prop
                 <GanttDnDHOC
                   id={block.id}
                   isLastChild={index === blockIds.length - 1}
-                  isDragEnabled={enableReorder}
+                  isDragEnabled={dragEnabled}
                   onDrop={handleOnDrop}
                 >
                   {(isDragging: boolean) => (

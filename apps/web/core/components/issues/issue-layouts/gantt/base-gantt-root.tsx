@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 // plane imports
@@ -12,7 +12,7 @@ import { ALL_ISSUES, EUserPermissions, EUserPermissionsLevel } from "@plane/cons
 import { useTranslation } from "@plane/i18n";
 import { TOAST_TYPE, setToast } from "@plane/propel/toast";
 import type { IBlockUpdateData, TIssue } from "@plane/types";
-import { EIssuesStoreType, EIssueLayoutTypes, GANTT_TIMELINE_TYPE } from "@plane/types";
+import { EIssueServiceType, EIssuesStoreType, EIssueLayoutTypes, GANTT_TIMELINE_TYPE } from "@plane/types";
 import { renderFormattedPayloadDate } from "@plane/utils";
 // components
 import { TimeLineTypeContext } from "@/components/gantt-chart/contexts";
@@ -28,10 +28,13 @@ import { computeShowGanttAssigneeTail } from "@/helpers/gantt-assignee-tail";
 // plane web hooks
 import { useBulkOperationStatus } from "@/plane-web/hooks/use-bulk-operation-status";
 
+import { useIssueDetail } from "@/hooks/store/use-issue-detail";
 import { IssueLayoutHOC } from "../issue-layout-HOC";
 import { GanttQuickAddIssueButton, QuickAddIssueRoot } from "../quick-add";
+import { buildGanttOrderedBlockIds } from "./build-gantt-block-ids";
 import { IssueGanttBlock } from "./blocks";
 import { GanttAssigneeTailProvider } from "./gantt-assignee-display-context";
+import { GanttSubExpandContext } from "./gantt-sub-expand-context";
 
 interface IBaseGanttRoot {
   viewId?: string | undefined;
@@ -58,6 +61,7 @@ export const BaseGanttRoot = observer(function BaseGanttRoot(ganttRootProps: IBa
   const { issues, issuesFilter, issueMap } = useIssues(storeType);
   const { fetchIssues, fetchNextIssues, updateIssue, quickAddIssue } = useIssuesActions(storeType);
   const { initGantt } = useTimeLineChart(GANTT_TIMELINE_TYPE.ISSUE);
+  const { subIssues: subIssuesStore } = useIssueDetail(isEpic ? EIssueServiceType.EPICS : EIssueServiceType.ISSUES);
   // store hooks
   const { allowPermissions } = useUserPermissions();
 
@@ -77,7 +81,41 @@ export const BaseGanttRoot = observer(function BaseGanttRoot(ganttRootProps: IBa
   }, [initGantt]);
 
   const issuesIds = (issues.groupedIssueIds?.[ALL_ISSUES] as string[]) ?? [];
-  const showAssigneeTail = computeShowGanttAssigneeTail(issuesIds, (id) => issueMap[id]);
+
+  const [expandedParentIds, setExpandedParentIds] = useState<Set<string>>(() => new Set());
+
+  const ganttBlockIds = buildGanttOrderedBlockIds(issuesIds, expandedParentIds, subIssuesStore);
+
+  const toggleSubExpand = useCallback(
+    async (issueId: string) => {
+      const issue = issueMap[issueId];
+      const ws = workspaceSlug?.toString();
+      if (!issue?.project_id || !ws) return;
+
+      if (expandedParentIds.has(issueId)) {
+        setExpandedParentIds((prev) => {
+          const next = new Set(prev);
+          next.delete(issueId);
+          return next;
+        });
+        return;
+      }
+
+      await subIssuesStore.fetchSubIssues(ws, issue.project_id, issueId);
+      setExpandedParentIds((prev) => new Set(prev).add(issueId));
+    },
+    [expandedParentIds, issueMap, subIssuesStore, workspaceSlug]
+  );
+
+  const subExpandContextValue = useMemo(
+    () => ({
+      isExpanded: (issueId: string) => expandedParentIds.has(issueId),
+      toggleExpand: toggleSubExpand,
+    }),
+    [expandedParentIds, toggleSubExpand]
+  );
+
+  const showAssigneeTail = computeShowGanttAssigneeTail(ganttBlockIds, (id) => issueMap[id]);
   const nextPageResults = issues.getPaginationData(undefined, undefined)?.nextPageResults;
 
   const { enableIssueCreation } = issues?.viewFlags || {};
@@ -166,31 +204,35 @@ export const BaseGanttRoot = observer(function BaseGanttRoot(ganttRootProps: IBa
     <IssueLayoutHOC layout={EIssueLayoutTypes.GANTT}>
       <TimeLineTypeContext.Provider value={GANTT_TIMELINE_TYPE.ISSUE}>
         <GanttAssigneeTailProvider showAssigneeTail={showAssigneeTail}>
-          <div className="h-full w-full">
-            <GanttChartRoot
-              border={false}
-              title={isEpic ? t("epic.label", { count: 2 }) : t("issue.label", { count: 2 })}
-              loaderTitle={isEpic ? t("epic.label", { count: 2 }) : t("issue.label", { count: 2 })}
-              blockIds={issuesIds}
-              blockUpdateHandler={updateIssueBlockStructure}
-              blockToRender={(data: TIssue) => <IssueGanttBlock issueId={data.id} isEpic={isEpic} />}
-              sidebarToRender={(sidebarProps) => <IssueGanttSidebar {...sidebarProps} showAllBlocks isEpic={isEpic} />}
-              enableBlockLeftResize={isAllowed}
-              enableBlockRightResize={isAllowed}
-              enableBlockMove={isAllowed}
-              enableReorder={appliedDisplayFilters?.order_by === "sort_order" && isAllowed}
-              enableAddBlock={isAllowed}
-              enableSelection={isBulkOperationsEnabled && isAllowed}
-              bottomSpacing={Boolean(quickAdd)}
-              quickAdd={quickAdd}
-              loadMoreBlocks={loadMoreIssues}
-              canLoadMoreBlocks={nextPageResults}
-              updateBlockDates={updateBlockDates}
-              showAllBlocks
-              enableDependency
-              isEpic={isEpic}
-            />
-          </div>
+          <GanttSubExpandContext.Provider value={subExpandContextValue}>
+            <div className="h-full w-full">
+              <GanttChartRoot
+                border={false}
+                title={isEpic ? t("epic.label", { count: 2 }) : t("issue.label", { count: 2 })}
+                loaderTitle={isEpic ? t("epic.label", { count: 2 }) : t("issue.label", { count: 2 })}
+                blockIds={ganttBlockIds}
+                blockUpdateHandler={updateIssueBlockStructure}
+                blockToRender={(data: TIssue) => <IssueGanttBlock issueId={data.id} isEpic={isEpic} />}
+                sidebarToRender={(sidebarProps) => (
+                  <IssueGanttSidebar {...sidebarProps} showAllBlocks isEpic={isEpic} />
+                )}
+                enableBlockLeftResize={isAllowed}
+                enableBlockRightResize={isAllowed}
+                enableBlockMove={isAllowed}
+                enableReorder={appliedDisplayFilters?.order_by === "sort_order" && isAllowed}
+                enableAddBlock={isAllowed}
+                enableSelection={isBulkOperationsEnabled && isAllowed}
+                bottomSpacing={Boolean(quickAdd)}
+                quickAdd={quickAdd}
+                loadMoreBlocks={loadMoreIssues}
+                canLoadMoreBlocks={nextPageResults}
+                updateBlockDates={updateBlockDates}
+                showAllBlocks
+                enableDependency
+                isEpic={isEpic}
+              />
+            </div>
+          </GanttSubExpandContext.Provider>
         </GanttAssigneeTailProvider>
       </TimeLineTypeContext.Provider>
     </IssueLayoutHOC>

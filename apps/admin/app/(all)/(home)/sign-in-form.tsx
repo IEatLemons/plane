@@ -8,7 +8,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 // plane internal packages
-import type { EAdminAuthErrorCodes, TAdminAuthErrorInfo } from "@plane/constants";
+import type { EAdminAuthErrorCodes, TAdminAuthErrorInfo, TAuthErrorInfo } from "@plane/constants";
 import { API_BASE_URL } from "@plane/constants";
 import { Button } from "@plane/propel/button";
 import { AuthService } from "@plane/services";
@@ -60,7 +60,7 @@ export function InstanceSignInForm() {
   const [csrfToken, setCsrfToken] = useState<string | undefined>(undefined);
   const [formData, setFormData] = useState<TFormData>(defaultFromData);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorInfo, setErrorInfo] = useState<TAdminAuthErrorInfo | undefined>(undefined);
+  const [errorInfo, setErrorInfo] = useState<TAdminAuthErrorInfo | TAuthErrorInfo | undefined>(undefined);
 
   const handleFormChange = (key: keyof TFormData, value: string | boolean) =>
     setFormData((prev) => ({ ...prev, [key]: value }));
@@ -95,7 +95,7 @@ export function InstanceSignInForm() {
   }, [errorCode, errorMessage]);
 
   const isButtonDisabled = useMemo(
-    () => (!isSubmitting && formData.email && formData.password ? false : true),
+    () => isSubmitting || !formData.email || !formData.password,
     [formData.email, formData.password, isSubmitting]
   );
 
@@ -147,7 +147,6 @@ export function InstanceSignInForm() {
                 value={formData.email}
                 onChange={(e) => handleFormChange("email", e.target.value)}
                 autoComplete="off"
-                autoFocus
               />
             </div>
 

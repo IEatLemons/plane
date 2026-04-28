@@ -24,12 +24,20 @@ export class AuthService extends APIService {
       });
   }
 
-  emailCheck = async (data: IEmailCheckData): Promise<IEmailCheckResponse> =>
-    this.post("/auth/email-check/", data, { headers: {} })
+  emailCheck = async (data: IEmailCheckData): Promise<IEmailCheckResponse> => {
+    const csrf = await this.requestCSRFToken();
+    const csrfToken = csrf?.csrf_token;
+    if (!csrfToken) throw new Error("CSRF token not found");
+    return this.post("/auth/email-check/", data, {
+      headers: {
+        "X-CSRFTOKEN": csrfToken,
+      },
+    })
       .then((response) => response?.data)
       .catch((error) => {
         throw error?.response?.data;
       });
+  };
 
   async sendResetPasswordLink(data: { email: string }): Promise<any> {
     return this.post(`/auth/forgot-password/`, data)
@@ -52,7 +60,14 @@ export class AuthService extends APIService {
   }
 
   async generateUniqueCode(data: { email: string }): Promise<any> {
-    return this.post("/auth/magic-generate/", data, { headers: {} })
+    const csrf = await this.requestCSRFToken();
+    const csrfToken = csrf?.csrf_token;
+    if (!csrfToken) throw new Error("CSRF token not found");
+    return this.post("/auth/magic-generate/", data, {
+      headers: {
+        "X-CSRFTOKEN": csrfToken,
+      },
+    })
       .then((response) => response?.data)
       .catch((error) => {
         throw error?.response?.data;
@@ -60,25 +75,24 @@ export class AuthService extends APIService {
   }
 
   async signOut(baseUrl: string): Promise<any> {
-    await this.requestCSRFToken().then((data) => {
-      const csrfToken = data?.csrf_token;
+    const data = await this.requestCSRFToken();
+    const csrfToken = data?.csrf_token;
 
-      if (!csrfToken) throw Error("CSRF token not found");
+    if (!csrfToken) throw Error("CSRF token not found");
 
-      const form = document.createElement("form");
-      const element1 = document.createElement("input");
+    const form = document.createElement("form");
+    const element1 = document.createElement("input");
 
-      form.method = "POST";
-      form.action = `${baseUrl}/auth/sign-out/`;
+    form.method = "POST";
+    form.action = `${baseUrl}/auth/sign-out/`;
 
-      element1.value = csrfToken;
-      element1.name = "csrfmiddlewaretoken";
-      element1.type = "hidden";
-      form.appendChild(element1);
+    element1.value = csrfToken;
+    element1.name = "csrfmiddlewaretoken";
+    element1.type = "hidden";
+    form.appendChild(element1);
 
-      document.body.appendChild(form);
+    document.body.appendChild(form);
 
-      form.submit();
-    });
+    form.submit();
   }
 }

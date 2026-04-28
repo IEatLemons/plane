@@ -4,15 +4,17 @@
  * See the LICENSE file for details.
  */
 
+import type { MouseEvent } from "react";
 import { observer } from "mobx-react";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import { useParams } from "next/navigation";
 import { differenceInCalendarDays } from "date-fns/differenceInCalendarDays";
 // plane imports
 import { Popover } from "@plane/propel/popover";
 import { Tooltip } from "@plane/propel/tooltip";
 import { ControlLink } from "@plane/ui";
-import { EIssuesStoreType } from "@plane/types";
-import { findTotalDaysInRange, generateWorkItemLink, getDate, getStableProjectAccentColor } from "@plane/utils";
+import { EIssueServiceType, EIssuesStoreType, type TIssue } from "@plane/types";
+import { cn, findTotalDaysInRange, generateWorkItemLink, getDate, getStableProjectAccentColor } from "@plane/utils";
 // components
 import { SIDEBAR_WIDTH } from "@/components/gantt-chart/constants";
 import { MemberBoringAvatar } from "@/components/member/member-boring-avatar";
@@ -28,6 +30,7 @@ import { useTimeLineChartStore } from "@/hooks/use-timeline-chart";
 // plane web imports
 import { IssueStats } from "@/plane-web/components/issues/issue-layouts/issue-stats";
 import { useGanttAssigneeTailDisplay } from "./gantt-assignee-display-context";
+import { useGanttSubExpand } from "./gantt-sub-expand-context";
 // local imports
 import { WorkItemPreviewCard } from "../../preview-card";
 import { getBlockViewDetails } from "../utils";
@@ -46,6 +49,20 @@ const MULTI_PROJECT_GANTT_STORE_TYPES = new Set<EIssuesStoreType>([
   EIssuesStoreType.TEAM_VIEW,
 ]);
 
+/** Number of parent links (0 for root issues in the hierarchy). */
+function getGanttIssueAncestorDepth(
+  getIssueById: (id: string) => TIssue | undefined,
+  issue: TIssue | undefined
+): number {
+  let depth = 0;
+  let parentId = issue?.parent_id;
+  while (parentId) {
+    depth += 1;
+    parentId = getIssueById(parentId)?.parent_id ?? null;
+  }
+  return depth;
+}
+
 export const IssueGanttBlock = observer(function IssueGanttBlock(props: Props) {
   const { issueId, isEpic } = props;
   // router
@@ -55,7 +72,7 @@ export const IssueGanttBlock = observer(function IssueGanttBlock(props: Props) {
   const { getProjectStates } = useProjectState();
   const {
     issue: { getIssueById },
-  } = useIssueDetail();
+  } = useIssueDetail(isEpic ? EIssueServiceType.EPICS : EIssueServiceType.ISSUES);
   const storeType = useIssueStoreType() as GanttStoreType;
   const showAssigneeTail = useGanttAssigneeTailDisplay();
   const { getUserDetails } = useMember();
@@ -63,6 +80,7 @@ export const IssueGanttBlock = observer(function IssueGanttBlock(props: Props) {
   const { isMobile } = usePlatformOS();
   const { handleRedirection } = useIssuePeekOverviewRedirection(isEpic);
   const { currentViewData } = useTimeLineChartStore();
+  const ganttSubExpand = useGanttSubExpand();
 
   // derived values
   const issueDetails = getIssueById(issueId);
@@ -105,6 +123,17 @@ export const IssueGanttBlock = observer(function IssueGanttBlock(props: Props) {
   const firstAssigneeId = issueDetails?.assignee_ids?.[0];
   const assigneeMember = firstAssigneeId ? getUserDetails(firstAssigneeId) : undefined;
 
+  const hasSubIssues = (issueDetails?.sub_issues_count ?? 0) > 0;
+  const expandOpen = Boolean(ganttSubExpand?.isExpanded(issueId));
+  const showExpandStrip = !!ganttSubExpand;
+
+  const handleExpandStripClick = (e: MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!ganttSubExpand || !hasSubIssues) return;
+    void ganttSubExpand.toggleExpand(issueId);
+  };
+
   return (
     <Popover delay={100} openOnHover>
       <Popover.Button
@@ -135,7 +164,10 @@ export const IssueGanttBlock = observer(function IssueGanttBlock(props: Props) {
                 )}
                 <div className="absolute top-0 left-0 z-0 h-full w-full bg-surface-1/50" />
                 <div
-                  className="relative sticky z-[1] flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden px-2.5 py-1 text-13"
+                  className={cn(
+                    "relative sticky z-[1] flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden py-1 pr-8 text-13",
+                    showExpandStrip ? "pl-2.5" : "px-2.5"
+                  )}
                   style={{ left: `${SIDEBAR_WIDTH}px` }}
                 >
                   <span className="min-w-0 flex-1 truncate text-primary">{issueDetails?.name}</span>
@@ -161,6 +193,30 @@ export const IssueGanttBlock = observer(function IssueGanttBlock(props: Props) {
                 </div>
               </div>
             </button>
+            {showExpandStrip && (
+              <button
+                type="button"
+                className={cn(
+                  "absolute top-0 right-0 z-[4] flex h-full w-8 touch-none items-center justify-center rounded-sm border-0 p-0",
+                  hasSubIssues
+                    ? "cursor-pointer bg-black/5 text-primary hover:bg-black/10"
+                    : "cursor-default text-tertiary"
+                )}
+                aria-expanded={hasSubIssues ? expandOpen : undefined}
+                disabled={!hasSubIssues}
+                onClick={handleExpandStripClick}
+              >
+                {hasSubIssues ? (
+                  expandOpen ? (
+                    <ChevronDown className="h-4 w-4" aria-hidden />
+                  ) : (
+                    <ChevronRight className="h-4 w-4" aria-hidden />
+                  )
+                ) : (
+                  <ChevronRight className="h-4 w-4 opacity-40" aria-hidden />
+                )}
+              </button>
+            )}
             {overdueWidthPx > 0 && (
               <div
                 aria-hidden
@@ -197,7 +253,7 @@ export const IssueGanttSidebarBlock = observer(function IssueGanttSidebarBlock(p
   // store hooks
   const {
     issue: { getIssueById },
-  } = useIssueDetail();
+  } = useIssueDetail(isEpic ? EIssueServiceType.EPICS : EIssueServiceType.ISSUES);
   const { isMobile } = usePlatformOS();
   const { getProjectIdentifierById } = useProject();
 
@@ -207,6 +263,8 @@ export const IssueGanttSidebarBlock = observer(function IssueGanttSidebarBlock(p
   // derived values
   const issueDetails = getIssueById(issueId);
   const projectIdentifier = getProjectIdentifierById(issueDetails?.project_id);
+  const ancestorDepth = getGanttIssueAncestorDepth(getIssueById, issueDetails);
+  const nestingPad = Math.min(ancestorDepth * 14, 56);
 
   const handleIssuePeekOverview = (e: any) => {
     e.stopPropagation(true);
@@ -231,7 +289,10 @@ export const IssueGanttSidebarBlock = observer(function IssueGanttSidebarBlock(p
       className="line-clamp-1 w-full cursor-pointer text-13 text-primary"
       disabled={!!issueDetails?.tempId}
     >
-      <div className="relative flex h-full w-full cursor-pointer items-center gap-2">
+      <div
+        className="relative flex h-full w-full cursor-pointer items-center gap-2"
+        style={{ paddingLeft: nestingPad ? `${nestingPad}px` : undefined }}
+      >
         <Tooltip tooltipContent={issueDetails?.name} isMobile={isMobile}>
           <span className="flex-grow truncate text-13 font-medium">{issueDetails?.name}</span>
         </Tooltip>
