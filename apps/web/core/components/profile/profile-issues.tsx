@@ -11,6 +11,7 @@ import useSWR from "swr";
 // plane imports
 import { ISSUE_DISPLAY_FILTERS_BY_PAGE } from "@plane/constants";
 import { EIssuesStoreType } from "@plane/types";
+import { cn } from "@plane/utils";
 // components
 import { ProfileIssuesCalendarLayout } from "@/components/issues/issue-layouts/calendar/roots/profile-issues-root";
 import { ProfileIssuesGanttLayout } from "@/components/issues/issue-layouts/gantt/roots/profile-issues-root";
@@ -25,10 +26,11 @@ import { IssuesStoreContext } from "@/hooks/use-issue-layout-store";
 
 type Props = {
   type: "assigned" | "subscribed" | "created";
+  className?: string;
 };
 
 export const ProfileIssuesPage = observer(function ProfileIssuesPage(props: Props) {
-  const { type } = props;
+  const { type, className } = props;
   const { workspaceSlug, userId } = useParams();
   // store hooks
   const {
@@ -64,9 +66,9 @@ export const ProfileIssuesPage = observer(function ProfileIssuesPage(props: Prop
       >
         {({ filter: profileWorkItemsFilter }) => (
           <>
-            <div className="flex h-full w-full flex-col">
+            <div className={cn("flex h-full w-full flex-col", className)}>
               {profileWorkItemsFilter && <WorkItemFiltersRow filter={profileWorkItemsFilter} />}
-              <div className="relative h-full w-full overflow-auto">
+              <div className="relative h-full min-h-0 w-full overflow-auto">
                 {activeLayout === "list" ? (
                   <ProfileIssuesListLayout />
                 ) : activeLayout === "kanban" ? (

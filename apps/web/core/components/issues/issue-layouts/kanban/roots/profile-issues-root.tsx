@@ -10,13 +10,15 @@ import { useParams } from "next/navigation";
 import { EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
 // hooks
 import { useUserPermissions } from "@/hooks/store/user";
+import { useProfileIssuesViewId } from "@/hooks/use-profile-issues-view-id";
 // local imports
 import { ProjectIssueQuickActions } from "../../quick-action-dropdowns";
 import { BaseKanBanRoot } from "../base-kanban-root";
 
 export const ProfileIssuesKanBanLayout = observer(function ProfileIssuesKanBanLayout() {
   // router
-  const { workspaceSlug, profileViewId } = useParams();
+  const { workspaceSlug } = useParams();
+  const viewId = useProfileIssuesViewId();
   const { allowPermissions } = useUserPermissions();
 
   const canEditPropertiesBasedOnProject = (projectId: string) =>
@@ -31,7 +33,7 @@ export const ProfileIssuesKanBanLayout = observer(function ProfileIssuesKanBanLa
     <BaseKanBanRoot
       QuickActions={ProjectIssueQuickActions}
       canEditPropertiesBasedOnProject={canEditPropertiesBasedOnProject}
-      viewId={profileViewId?.toString()}
+      viewId={viewId}
     />
   );
 });

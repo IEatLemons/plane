@@ -13,7 +13,8 @@ import { TranslationProvider } from "@plane/i18n";
 import { Toast } from "@plane/propel/toast";
 // helpers
 import { resolveGeneralTheme } from "@plane/utils";
-// polyfills
+// polyfills (side-effect only)
+// oxlint-disable-next-line import/no-unassigned-import -- register requestIdleCallback polyfill
 import "@/lib/polyfills";
 // mobx store provider
 import { StoreProvider } from "@/lib/store-context";

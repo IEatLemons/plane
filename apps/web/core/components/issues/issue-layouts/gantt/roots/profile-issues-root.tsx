@@ -5,10 +5,10 @@
  */
 
 import { observer } from "mobx-react";
-import { useParams } from "next/navigation";
+import { useProfileIssuesViewId } from "@/hooks/use-profile-issues-view-id";
 import { BaseGanttRoot } from "../base-gantt-root";
 
 export const ProfileIssuesGanttLayout = observer(function ProfileIssuesGanttLayout() {
-  const { profileViewId } = useParams();
-  return <BaseGanttRoot viewId={profileViewId?.toString()} />;
+  const viewId = useProfileIssuesViewId();
+  return <BaseGanttRoot viewId={viewId} />;
 });

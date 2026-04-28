@@ -4,19 +4,20 @@
  * See the LICENSE file for details.
  */
 
-import type { FC } from "react";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 import { EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
 // hooks
 import { useUserPermissions } from "@/hooks/store/user";
+import { useProfileIssuesViewId } from "@/hooks/use-profile-issues-view-id";
 // local imports
 import { ProjectIssueQuickActions } from "../../quick-action-dropdowns";
 import { BaseListRoot } from "../base-list-root";
 
 export const ProfileIssuesListLayout = observer(function ProfileIssuesListLayout() {
   // router
-  const { workspaceSlug, profileViewId } = useParams();
+  const { workspaceSlug } = useParams();
+  const viewId = useProfileIssuesViewId();
   // store
   const { allowPermissions } = useUserPermissions();
 
@@ -32,7 +33,7 @@ export const ProfileIssuesListLayout = observer(function ProfileIssuesListLayout
     <BaseListRoot
       QuickActions={ProjectIssueQuickActions}
       canEditPropertiesBasedOnProject={canEditPropertiesBasedOnProject}
-      viewId={profileViewId?.toString()}
+      viewId={viewId}
     />
   );
 });

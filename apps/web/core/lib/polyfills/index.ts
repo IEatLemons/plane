@@ -27,4 +27,5 @@ if (typeof window !== "undefined" && window) {
     };
 }
 
-export {};
+/** Marks file as ES module so side effects above stay encapsulated */
+export const POLYFILLS_REGISTERED = true;

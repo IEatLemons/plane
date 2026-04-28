@@ -8,11 +8,13 @@ import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 import { EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
 import { useUserPermissions } from "@/hooks/store/user";
+import { useProfileIssuesViewId } from "@/hooks/use-profile-issues-view-id";
 import { ProjectIssueQuickActions } from "../../quick-action-dropdowns";
 import { BaseCalendarRoot } from "../base-calendar-root";
 
 export const ProfileIssuesCalendarLayout = observer(function ProfileIssuesCalendarLayout() {
-  const { workspaceSlug, profileViewId } = useParams();
+  const { workspaceSlug } = useParams();
+  const viewId = useProfileIssuesViewId();
   const { allowPermissions } = useUserPermissions();
 
   const canEditPropertiesBasedOnProject = (projectId: string) =>
@@ -27,7 +29,7 @@ export const ProfileIssuesCalendarLayout = observer(function ProfileIssuesCalend
     <BaseCalendarRoot
       QuickActions={ProjectIssueQuickActions}
       canEditPropertiesBasedOnProject={canEditPropertiesBasedOnProject}
-      viewId={profileViewId?.toString()}
+      viewId={viewId}
     />
   );
 });

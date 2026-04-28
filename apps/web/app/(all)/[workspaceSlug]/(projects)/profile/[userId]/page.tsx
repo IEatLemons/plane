@@ -6,7 +6,7 @@
 
 import useSWR from "swr";
 // plane imports
-import { GROUP_CHOICES } from "@plane/constants";
+import { EUserPermissions, EUserPermissionsLevel, GROUP_CHOICES } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
 import type { IUserStateDistribution, TStateGroups } from "@plane/types";
 import { ContentWrapper } from "@plane/ui";
@@ -17,8 +17,11 @@ import { ProfilePriorityDistribution } from "@/components/profile/overview/prior
 import { ProfileStateDistribution } from "@/components/profile/overview/state-distribution";
 import { ProfileStats } from "@/components/profile/overview/stats";
 import { ProfileWorkload } from "@/components/profile/overview/workload";
+import { ProfileIssuesPage } from "@/components/profile/profile-issues";
 // constants
 import { USER_PROFILE_DATA } from "@/constants/fetch-keys";
+// hooks
+import { useUserPermissions } from "@/hooks/store/user";
 // services
 import { UserService } from "@/services/user.service";
 import type { Route } from "./+types/page";
@@ -27,6 +30,11 @@ const userService = new UserService();
 export default function ProfileOverviewPage({ params }: Route.ComponentProps) {
   const { workspaceSlug, userId } = params;
 
+  const { allowPermissions } = useUserPermissions();
+  const canShowAssignedOnSummary = allowPermissions(
+    [EUserPermissions.ADMIN, EUserPermissions.MEMBER],
+    EUserPermissionsLevel.WORKSPACE
+  );
   const { t } = useTranslation();
   const { data: userProfile } = useSWR(USER_PROFILE_DATA(workspaceSlug, userId), () =>
     userService.getUserProfileData(workspaceSlug, userId)
@@ -49,6 +57,14 @@ export default function ProfileOverviewPage({ params }: Route.ComponentProps) {
           <ProfilePriorityDistribution userProfile={userProfile} />
           <ProfileStateDistribution stateDistribution={stateDistribution} userProfile={userProfile} />
         </div>
+        {canShowAssignedOnSummary && (
+          <div className="space-y-2">
+            <h3 className="text-16 font-medium">{t("profile.tabs.assigned")}</h3>
+            <div className="h-[min(70vh,800px)] min-h-0 w-full overflow-hidden">
+              <ProfileIssuesPage type="assigned" />
+            </div>
+          </div>
+        )}
         <ProfileActivity />
       </ContentWrapper>
     </>
