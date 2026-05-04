@@ -51,7 +51,7 @@ export const BlockRow = observer(function BlockRow(props: Props) {
     );
 
     // Observe if the block is visible on the chart
-    const observer = new IntersectionObserver(
+    const intersectionObserver = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           setIsHidden(!entry.isIntersecting);
@@ -64,10 +64,10 @@ export const BlockRow = observer(function BlockRow(props: Props) {
       }
     );
 
-    observer.observe(timelineBlock);
+    intersectionObserver.observe(timelineBlock);
 
     return () => {
-      observer.unobserve(timelineBlock);
+      intersectionObserver.unobserve(timelineBlock);
     };
   }, [block]);
 
@@ -78,6 +78,7 @@ export const BlockRow = observer(function BlockRow(props: Props) {
   const isBlockSelected = selectionHelpers.getIsEntitySelected(block.id);
   const isBlockFocused = selectionHelpers.getIsEntityActive(block.id);
   const isBlockHoveredOn = isBlockActive(block.id);
+  const isSubIssueRow = Boolean(block.data?.parent_id);
 
   return (
     <div
@@ -89,13 +90,17 @@ export const BlockRow = observer(function BlockRow(props: Props) {
       }}
     >
       <div
-        className={cn("relative h-full bg-layer-transparent hover:bg-layer-transparent-hover", {
-          "rounded-l-sm border border-r-0 border-accent-strong": getIsIssuePeeked(block.data.id),
-          "bg-layer-transparent-hover": isBlockHoveredOn,
-          "bg-accent-primary/5 hover:bg-accent-primary/10": isBlockSelected,
-          "bg-accent-primary/10": isBlockSelected && isBlockHoveredOn,
-          "border border-r-0 border-strong-1": isBlockFocused,
-        })}
+        className={cn(
+          "relative h-full hover:bg-layer-transparent-hover",
+          isSubIssueRow ? "bg-surface-1/40" : "bg-layer-transparent",
+          {
+            "rounded-l-sm border border-r-0 border-accent-strong": getIsIssuePeeked(block.data.id),
+            "bg-layer-transparent-hover": isBlockHoveredOn,
+            "bg-accent-primary/5 hover:bg-accent-primary/10": isBlockSelected,
+            "bg-accent-primary/10": isBlockSelected && isBlockHoveredOn,
+            "border border-r-0 border-strong-1": isBlockFocused,
+          }
+        )}
       >
         {isBlockVisibleOnChart
           ? isHidden && (

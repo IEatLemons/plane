@@ -18,7 +18,7 @@ export function sortGanttSiblingIssueIds(
   issueIds: string[],
   getIssueById: (id: string) => TIssue | undefined
 ): string[] {
-  return [...issueIds].toSorted((a, b) => {
+  return [...issueIds].toSorted((a: string, b: string) => {
     const ia = getIssueById(a);
     const ib = getIssueById(b);
     const sa = ia?.start_date?.trim() ?? "";

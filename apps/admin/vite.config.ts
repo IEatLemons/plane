@@ -51,7 +51,7 @@ function adminBasePathRedirectPlugin(baseWithSlash: string): Plugin {
   };
 }
 
-export default defineConfig(() => ({
+export default defineConfig(({ command }) => ({
   base: viteBasePath,
   define: {
     "process.env": JSON.stringify(viteEnv),
@@ -66,6 +66,13 @@ export default defineConfig(() => ({
   ],
   resolve: {
     alias: {
+      // Dev server: `@plane/utils` package.json points at `dist/`; alias to source so admin
+      // starts without requiring a prior `pnpm --filter=@plane/utils build`.
+      ...(command === "serve"
+        ? {
+            "@plane/utils": path.resolve(__dirname, "../../packages/utils/src/index.ts"),
+          }
+        : {}),
       // Next.js compatibility shims used within admin
       "next/link": path.resolve(__dirname, "app/compat/next/link.tsx"),
       "next/navigation": path.resolve(__dirname, "app/compat/next/navigation.ts"),

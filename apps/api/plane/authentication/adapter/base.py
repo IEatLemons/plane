@@ -356,5 +356,8 @@ class Adapter:
         if self.token_data:
             self.create_update_account(user=user)
 
+        # Ensure a profile row exists (login path skips new-user creation; legacy users may lack Profile)
+        Profile.objects.get_or_create(user=user)
+
         # Return user
         return user
