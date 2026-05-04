@@ -88,7 +88,7 @@ export const SubIssuesListItem = observer(function SubIssuesListItem(props: Prop
   const displayProperties = subIssueFilters?.displayProperties ?? {};
 
   //
-  const handleIssuePeekOverview = (issue: TIssue) => handleRedirection(workspaceSlug, issue, isMobile);
+  const handleIssuePeekOverview = (targetIssue: TIssue) => handleRedirection(workspaceSlug, targetIssue, isMobile);
 
   if (!issue) return <></>;
 
@@ -125,8 +125,9 @@ export const SubIssuesListItem = observer(function SubIssuesListItem(props: Prop
                       <Loader width={14} strokeWidth={2} className="animate-spin" />
                     </div>
                   ) : (
-                    <div
-                      className="flex h-full w-full cursor-pointer items-center justify-center text-placeholder hover:text-tertiary"
+                    <button
+                      type="button"
+                      className="flex h-full w-full cursor-pointer items-center justify-center border-0 bg-transparent p-0 text-placeholder hover:text-tertiary"
                       onClick={async (e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -144,7 +145,7 @@ export const SubIssuesListItem = observer(function SubIssuesListItem(props: Prop
                         })}
                         strokeWidth={2.5}
                       />
-                    </div>
+                    </button>
                   )}
                 </>
               )}
@@ -172,7 +173,8 @@ export const SubIssuesListItem = observer(function SubIssuesListItem(props: Prop
 
             <div
               className="flex-shrink-0 text-13"
-              onClick={(e) => {
+              role="presentation"
+              onMouseDown={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
               }}
@@ -255,17 +257,19 @@ export const SubIssuesListItem = observer(function SubIssuesListItem(props: Prop
         issue.project_id &&
         subIssueCount > 0 &&
         !isCurrentIssueRoot && (
-          <SubIssuesListRoot
-            storeType={storeType}
-            workspaceSlug={workspaceSlug}
-            projectId={issue.project_id}
-            parentIssueId={issue.id}
-            rootIssueId={rootIssueId}
-            spacingLeft={spacingLeft + 22}
-            canEdit={canEdit}
-            handleIssueCrudState={handleIssueCrudState}
-            subIssueOperations={subIssueOperations}
-          />
+          <div className="mt-0.5 overflow-hidden rounded-sm bg-surface-1/40">
+            <SubIssuesListRoot
+              storeType={storeType}
+              workspaceSlug={workspaceSlug}
+              projectId={issue.project_id}
+              parentIssueId={issue.id}
+              rootIssueId={rootIssueId}
+              spacingLeft={spacingLeft + 22}
+              canEdit={canEdit}
+              handleIssueCrudState={handleIssueCrudState}
+              subIssueOperations={subIssueOperations}
+            />
+          </div>
         )}
     </div>
   );

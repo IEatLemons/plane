@@ -32,6 +32,7 @@ import { useIssueDetail } from "@/hooks/store/use-issue-detail";
 import { IssueLayoutHOC } from "../issue-layout-HOC";
 import { GanttQuickAddIssueButton, QuickAddIssueRoot } from "../quick-add";
 import { buildGanttOrderedBlockIds } from "./build-gantt-block-ids";
+import { filterGanttRootIssueIds } from "./filter-gantt-root-issue-ids";
 import { IssueGanttBlock } from "./blocks";
 import { GanttAssigneeTailProvider } from "./gantt-assignee-display-context";
 import { GanttSubExpandContext } from "./gantt-sub-expand-context";
@@ -80,11 +81,18 @@ export const BaseGanttRoot = observer(function BaseGanttRoot(ganttRootProps: IBa
     initGantt();
   }, [initGantt]);
 
-  const issuesIds = (issues.groupedIssueIds?.[ALL_ISSUES] as string[]) ?? [];
+  const issuesIds = useMemo(() => (issues.groupedIssueIds?.[ALL_ISSUES] as string[]) ?? [], [issues.groupedIssueIds]);
 
   const [expandedParentIds, setExpandedParentIds] = useState<Set<string>>(() => new Set());
 
-  const ganttBlockIds = buildGanttOrderedBlockIds(issuesIds, expandedParentIds, subIssuesStore);
+  const ganttRootIds = useMemo(() => filterGanttRootIssueIds(issuesIds, (id) => issueMap[id]), [issuesIds, issueMap]);
+
+  const ganttBlockIds = buildGanttOrderedBlockIds(
+    ganttRootIds,
+    expandedParentIds,
+    subIssuesStore,
+    (id) => issueMap[id]
+  );
 
   const toggleSubExpand = useCallback(
     async (issueId: string) => {

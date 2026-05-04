@@ -112,6 +112,7 @@ export const IssueGanttSidebar = observer(function IssueGanttSidebar(props: Prop
                       isDragging={isDragging}
                       selectionHelpers={selectionHelpers}
                       isEpic={isEpic}
+                      isSubIssueRow={isSubIssueRow}
                     />
                   )}
                 </GanttDnDHOC>

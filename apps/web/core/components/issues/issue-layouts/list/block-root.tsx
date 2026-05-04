@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import type { FC, MutableRefObject } from "react";
+import type { MutableRefObject } from "react";
 import React, { useEffect, useRef, useState } from "react";
 import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
 import { dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
@@ -162,28 +162,30 @@ export const IssueBlockRoot = observer(function IssueBlockRoot(props: Props) {
         />
       </RenderIfVisible>
 
-      {isExpanded &&
-        !isEpic &&
-        subIssues?.map((subIssueId) => (
-          <IssueBlockRoot
-            key={`${subIssueId}`}
-            issueId={subIssueId}
-            issuesMap={issuesMap}
-            updateIssue={updateIssue}
-            quickActions={quickActions}
-            canEditProperties={canEditProperties}
-            displayProperties={displayProperties}
-            nestingLevel={nestingLevel + 1}
-            spacingLeft={spacingLeft + 12}
-            containerRef={containerRef}
-            selectionHelpers={selectionHelpers}
-            groupId={groupId}
-            isDragAllowed={isDragAllowed}
-            canDropOverIssue={canDropOverIssue}
-            isParentIssueBeingDragged={isParentIssueBeingDragged || isCurrentBlockDragging}
-            shouldRenderByDefault={isExpanded}
-          />
-        ))}
+      {isExpanded && !isEpic && !!subIssues?.length && (
+        <div className="rounded-b-sm bg-surface-1/40">
+          {subIssues.map((subIssueId) => (
+            <IssueBlockRoot
+              key={`${subIssueId}`}
+              issueId={subIssueId}
+              issuesMap={issuesMap}
+              updateIssue={updateIssue}
+              quickActions={quickActions}
+              canEditProperties={canEditProperties}
+              displayProperties={displayProperties}
+              nestingLevel={nestingLevel + 1}
+              spacingLeft={spacingLeft + 12}
+              containerRef={containerRef}
+              selectionHelpers={selectionHelpers}
+              groupId={groupId}
+              isDragAllowed={isDragAllowed}
+              canDropOverIssue={canDropOverIssue}
+              isParentIssueBeingDragged={isParentIssueBeingDragged || isCurrentBlockDragging}
+              shouldRenderByDefault={isExpanded}
+            />
+          ))}
+        </div>
+      )}
       {isLastChild && <DropIndicator classNames={"absolute z-[2]"} isVisible={instruction === "DRAG_BELOW"} />}
     </div>
   );

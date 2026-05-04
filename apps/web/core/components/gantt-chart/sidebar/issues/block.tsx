@@ -25,10 +25,11 @@ type Props = {
   isDragging: boolean;
   selectionHelpers?: TSelectionHelper;
   isEpic?: boolean;
+  isSubIssueRow?: boolean;
 };
 
 export const IssuesSidebarBlock = observer(function IssuesSidebarBlock(props: Props) {
-  const { block, enableSelection, isDragging, selectionHelpers, isEpic = false } = props;
+  const { block, enableSelection, isDragging, selectionHelpers, isEpic = false, isSubIssueRow = false } = props;
   // store hooks
   const { updateActiveBlockId, isBlockActive, getNumberOfDaysFromPosition } = useTimeLineChartStore();
   const { getIsIssuePeeked } = useIssueDetail();
@@ -46,6 +47,7 @@ export const IssuesSidebarBlock = observer(function IssuesSidebarBlock(props: Pr
     <div
       className={cn("group/list-block", {
         "rounded-sm bg-layer-1": isDragging,
+        "rounded-sm bg-surface-1/40": isSubIssueRow && !isDragging,
         "rounded-l-sm border border-r-0 border-accent-strong": getIsIssuePeeked(block.data.id),
         "border border-r-0 border-strong-1": isIssueFocused,
       })}

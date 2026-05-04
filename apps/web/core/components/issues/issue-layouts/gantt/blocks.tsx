@@ -259,12 +259,15 @@ export const IssueGanttSidebarBlock = observer(function IssueGanttSidebarBlock(p
 
   // handlers
   const { handleRedirection } = useIssuePeekOverviewRedirection(isEpic);
+  const ganttSubExpand = useGanttSubExpand();
 
   // derived values
   const issueDetails = getIssueById(issueId);
   const projectIdentifier = getProjectIdentifierById(issueDetails?.project_id);
   const ancestorDepth = getGanttIssueAncestorDepth(getIssueById, issueDetails);
   const nestingPad = Math.min(ancestorDepth * 14, 56);
+  const hasSubIssues = (issueDetails?.sub_issues_count ?? 0) > 0;
+  const expandOpen = Boolean(ganttSubExpand?.isExpanded(issueId));
 
   const handleIssuePeekOverview = (e: any) => {
     e.stopPropagation(true);
@@ -281,22 +284,43 @@ export const IssueGanttSidebarBlock = observer(function IssueGanttSidebarBlock(p
     isEpic,
   });
 
+  const handleExpandSidebarClick = (e: MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!ganttSubExpand || !hasSubIssues) return;
+    void ganttSubExpand.toggleExpand(issueId);
+  };
+
   return (
-    <ControlLink
-      id={`issue-${issueId}`}
-      href={workItemLink}
-      onClick={handleIssuePeekOverview}
-      className="line-clamp-1 w-full cursor-pointer text-13 text-primary"
-      disabled={!!issueDetails?.tempId}
+    <div
+      className="flex min-w-0 flex-1 items-center gap-1"
+      style={{ paddingLeft: nestingPad ? `${nestingPad}px` : undefined }}
     >
-      <div
-        className="relative flex h-full w-full cursor-pointer items-center gap-2"
-        style={{ paddingLeft: nestingPad ? `${nestingPad}px` : undefined }}
+      {ganttSubExpand && hasSubIssues ? (
+        <button
+          type="button"
+          aria-expanded={expandOpen}
+          className="flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-sm border-0 bg-transparent p-0 text-primary hover:bg-layer-1"
+          onClick={handleExpandSidebarClick}
+        >
+          {expandOpen ? (
+            <ChevronDown className="h-4 w-4 shrink-0" aria-hidden />
+          ) : (
+            <ChevronRight className="h-4 w-4 shrink-0" aria-hidden />
+          )}
+        </button>
+      ) : null}
+      <ControlLink
+        id={`issue-${issueId}`}
+        href={workItemLink}
+        onClick={handleIssuePeekOverview}
+        className="line-clamp-1 min-w-0 flex-1 cursor-pointer text-13 text-primary"
+        disabled={!!issueDetails?.tempId}
       >
         <Tooltip tooltipContent={issueDetails?.name} isMobile={isMobile}>
-          <span className="flex-grow truncate text-13 font-medium">{issueDetails?.name}</span>
+          <span className="block truncate text-13 font-medium">{issueDetails?.name}</span>
         </Tooltip>
-      </div>
-    </ControlLink>
+      </ControlLink>
+    </div>
   );
 });
