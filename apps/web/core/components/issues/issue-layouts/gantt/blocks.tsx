@@ -158,7 +158,7 @@ export const IssueGanttBlock = observer(function IssueGanttBlock(props: Props) {
                 {showSubProgress && (
                   <div
                     aria-hidden
-                    className="absolute top-0 left-0 z-0 h-full bg-black/20"
+                    className="absolute top-0 left-0 z-0 h-full bg-black/20 dark:bg-white/20"
                     style={{ width: `${subProgressPct}%` }}
                   />
                 )}
@@ -199,7 +199,7 @@ export const IssueGanttBlock = observer(function IssueGanttBlock(props: Props) {
                 className={cn(
                   "absolute top-0 right-0 z-[4] flex h-full w-8 touch-none items-center justify-center rounded-sm border-0 p-0",
                   hasSubIssues
-                    ? "cursor-pointer bg-black/5 text-primary hover:bg-black/10"
+                    ? "cursor-pointer bg-black/5 text-primary hover:bg-black/10 dark:bg-white/10 dark:hover:bg-white/15"
                     : "cursor-default text-tertiary"
                 )}
                 aria-expanded={hasSubIssues ? expandOpen : undefined}
