@@ -104,7 +104,7 @@ export const WorkspaceBugPoolRoot = observer(function WorkspaceBugPoolRoot(props
         <>
           <ul className="divide-y divide-subtle overflow-y-auto rounded-md border border-subtle">
             {items.map((row) => {
-              const childHref = `/${workspaceSlug}/projects/${row.project_id}/issues/${row.id}/`;
+              const childHref = `/${workspaceSlug}/projects/${row.project_id}/defects/${row.id}`;
               const parentLabel =
                 row.parent_sequence_id != null && row.project_identifier && row.parent_name
                   ? `${row.project_identifier}-${row.parent_sequence_id}: ${row.parent_name}`

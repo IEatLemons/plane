@@ -92,3 +92,5 @@ from .sticky import Sticky
 from .description import Description, DescriptionVersion
 
 from .work_report import WorkReport
+
+from .defect import Defect

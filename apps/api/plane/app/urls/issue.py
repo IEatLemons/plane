@@ -7,6 +7,8 @@ from django.urls import path
 from plane.app.views import (
     BulkCreateIssueLabelsEndpoint,
     BulkDeleteIssuesEndpoint,
+    DefectDetailEndpoint,
+    DefectListCreateEndpoint,
     SubIssuesEndpoint,
     IssueLinkViewSet,
     IssueAttachmentEndpoint,
@@ -34,6 +36,16 @@ from plane.app.views import (
 )
 
 urlpatterns = [
+    path(
+        "workspaces/<str:slug>/projects/<uuid:project_id>/defects/",
+        DefectListCreateEndpoint.as_view(),
+        name="project-defect-list",
+    ),
+    path(
+        "workspaces/<str:slug>/projects/<uuid:project_id>/defects/<uuid:defect_id>/",
+        DefectDetailEndpoint.as_view(),
+        name="project-defect-detail",
+    ),
     path(
         "workspaces/<str:slug>/projects/<uuid:project_id>/issues/list/",
         IssueListEndpoint.as_view(),

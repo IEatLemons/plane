@@ -88,7 +88,7 @@ export const coreRoutes: RouteConfigEntry[] = [
         // Workspace requirement pool (aggregates project intakes)
         route(":workspaceSlug/requirement-pool", "./(all)/[workspaceSlug]/(projects)/requirement-pool/page.tsx"),
 
-        // Workspace bug pool (aggregates sub-work-items with a parent)
+        // Workspace bug pool (defects linked to tasks)
         route(":workspaceSlug/bug-pool", "./(all)/[workspaceSlug]/(projects)/bug-pool/page.tsx"),
 
         // Notifications
@@ -158,6 +158,10 @@ export const coreRoutes: RouteConfigEntry[] = [
               "./(all)/[workspaceSlug]/(projects)/projects/(detail)/[projectId]/issues/(list)/batch-import/page.tsx"
             ),
           ]),
+          route(
+            ":workspaceSlug/projects/:projectId/defects/:defectId",
+            "./(all)/[workspaceSlug]/(projects)/projects/(detail)/[projectId]/defects/[defectId]/page.tsx"
+          ),
           // Issue Detail
           route(
             ":workspaceSlug/projects/:projectId/issues/:issueId",
@@ -234,7 +238,7 @@ export const coreRoutes: RouteConfigEntry[] = [
               "./(all)/[workspaceSlug]/(projects)/projects/(detail)/[projectId]/intake/page.tsx"
             ),
           ]),
-          // Bug pool (project-scoped view of sub-work-items)
+          // Bug pool (project-scoped defect list)
           route(
             ":workspaceSlug/projects/:projectId/bug-pool",
             "./(all)/[workspaceSlug]/(projects)/projects/(detail)/[projectId]/bug-pool/page.tsx"

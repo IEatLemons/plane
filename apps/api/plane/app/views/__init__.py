@@ -155,6 +155,8 @@ from .issue.reaction import IssueReactionViewSet
 
 from .issue.sub_issue import SubIssuesEndpoint
 
+from .issue.defect import DefectDetailEndpoint, DefectListCreateEndpoint
+
 from .issue.subscriber import IssueSubscriberViewSet
 
 from .issue.version import IssueVersionEndpoint, WorkItemDescriptionVersionEndpoint

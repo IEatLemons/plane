@@ -278,17 +278,40 @@ export interface IWorkspaceBugPoolItem {
   project_id: string;
   project_name: string;
   project_identifier: string;
+  /** Defect row id (same as `id`; listed for clarity). */
+  defect_id?: string;
+  /** Parent work item (task) this defect belongs to. */
   parent_id: string | null;
   parent_name: string;
   parent_sequence_id: number | null;
   state_id: string | null;
   priority: string;
+  task_id?: string;
 }
 
 export interface IWorkspaceBugPoolResponse {
   count: number;
   results: IWorkspaceBugPoolItem[];
   next_cursor: number | null;
+}
+
+/** Project-scoped defect (bug) linked to a task issue. */
+export interface IDefect {
+  id: string;
+  name: string;
+  sequence_id: number;
+  priority: string;
+  state_id: string | null;
+  description_html: string;
+  description_json: Record<string, unknown>;
+  task_id: string;
+  project_id: string;
+  created_at: string;
+  updated_at: string;
+  completed_at: string | null;
+  task_name?: string;
+  task_sequence_id?: number;
+  project_identifier?: string;
 }
 
 export interface IWorkspaceSidebarNavigationItem {

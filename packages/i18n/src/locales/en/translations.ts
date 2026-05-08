@@ -155,11 +155,25 @@ export default {
   bug_pool: {
     title: "Bug pool",
     description:
-      "Lists sub-work items that have a parent work item (often used for bugs). Open a row to jump to the item in its project.",
-    empty: "No sub-work items yet. Add sub-work items under a parent task in the work item detail view.",
+      "Lists defects linked to work items (tasks) across projects. Open a row for defect details; the subtitle shows the parent task.",
+    empty: "No defects yet. Create one from the Defects section in a work item's sidebar.",
     filter_project: "Project",
     all_projects: "All projects",
-    parent_work_item_hint: "Parent work item",
+    parent_work_item_hint: "Parent task",
+  },
+  defect_panel: {
+    title: "Defects",
+    hint: "Standalone defects attached to this work item. Use the workspace bug pool to see them across projects.",
+    name_placeholder: "Defect title",
+    add: "Add",
+    empty: "No defects yet",
+    load_error: "Could not load defects",
+    create_error: "Could not create defect",
+    created: "Defect created",
+  },
+  defect_detail: {
+    not_found: "This defect could not be found or you don't have access.",
+    linked_task: "Linked task",
   },
   projects: "Projects",
   views: "Views",

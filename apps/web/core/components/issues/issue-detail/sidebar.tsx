@@ -38,6 +38,7 @@ import { useProjectState } from "@/hooks/store/use-project-state";
 // plane web components
 // components
 import { WorkItemAdditionalSidebarProperties } from "@/plane-web/components/issues/issue-details/additional-properties";
+import { TaskDefectsPanel } from "@/components/issues/issue-detail/task-defects-panel";
 import { IssueParentSelectRoot } from "@/plane-web/components/issues/issue-details/parent-select-root";
 import { DateAlert } from "@/plane-web/components/issues/issue-details/sidebar/date-alert";
 import { TransferHopInfo } from "@/plane-web/components/issues/issue-details/sidebar/transfer-hop-info";
@@ -271,6 +272,14 @@ export const IssueDetailsSidebar = observer(function IssueDetailsSidebar(props: 
               workItemTypeId={issue.type_id}
               projectId={projectId}
               workspaceSlug={workspaceSlug}
+              isEditable={isEditable}
+            />
+
+            <TaskDefectsPanel
+              workspaceSlug={workspaceSlug}
+              projectId={projectId}
+              issueId={issueId}
+              projectIdentifier={projectDetails?.identifier}
               isEditable={isEditable}
             />
           </div>
