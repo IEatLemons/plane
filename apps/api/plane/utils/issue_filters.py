@@ -389,6 +389,21 @@ def filter_sub_issue_toggle(params, issue_filter, method, prefix=""):
     return issue_filter
 
 
+def filter_has_parent(params, issue_filter, method, prefix=""):
+    """Explicit parent filter for lists (e.g. bug pool). Avoids overloading sub_issue display semantics."""
+    if method != "GET":
+        return issue_filter
+    raw = params.get("has_parent")
+    if raw is None:
+        return issue_filter
+    val = str(raw).lower()
+    if val in ("true", "1", "yes"):
+        issue_filter[f"{prefix}parent__isnull"] = False
+    elif val in ("false", "0", "no"):
+        issue_filter[f"{prefix}parent__isnull"] = True
+    return issue_filter
+
+
 def filter_subscribed_issues(params, issue_filter, method, prefix=""):
     if method == "GET":
         subscribers = [item for item in params.get("subscriber").split(",") if item != "null"]
@@ -452,6 +467,7 @@ def issue_filters(query_params, method, prefix=""):
         "intake_status": filter_intake_status,
         "inbox_status": filter_inbox_status,
         "sub_issue": filter_sub_issue_toggle,
+        "has_parent": filter_has_parent,
         "subscriber": filter_subscribed_issues,
         "start_target_date": filter_start_target_date_issues,
     }

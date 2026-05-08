@@ -4,13 +4,14 @@
  * See the LICENSE file for details.
  */
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, type KeyboardEvent, type MouseEvent } from "react";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 // icons
 import { DueDatePropertyIcon, StartDatePropertyIcon } from "@plane/propel/icons";
 // types
 import type { TIssuePriorities, TWorkspaceDraftIssue } from "@plane/types";
+import { useTranslation } from "@plane/i18n";
 import { getDate, renderFormattedPayloadDate, shouldHighlightIssueDueDate } from "@plane/utils";
 // components
 import { CycleDropdown } from "@/components/dropdowns/cycle";
@@ -31,6 +32,11 @@ import { usePlatformOS } from "@/hooks/use-platform-os";
 import { IssuePropertyLabels } from "../issue-layouts/properties";
 // local components
 
+function stopDraftPropertyRowInteraction(event: MouseEvent<HTMLDivElement> | KeyboardEvent<HTMLDivElement>): void {
+  event.stopPropagation();
+  if (event.type === "click") event.preventDefault();
+}
+
 export interface IIssueProperties {
   issue: TWorkspaceDraftIssue;
   updateIssue:
@@ -48,6 +54,7 @@ export const DraftIssueProperties = observer(function DraftIssueProperties(props
   const { areEstimateEnabledByProjectId } = useProjectEstimates();
   const { getStateById } = useProjectState();
   const { isMobile } = usePlatformOS();
+  const { t } = useTranslation();
   const projectDetails = getProjectById(issue.project_id);
 
   // router
@@ -117,6 +124,20 @@ export const DraftIssueProperties = observer(function DraftIssueProperties(props
       target_date: date ? (renderFormattedPayloadDate(date) ?? undefined) : undefined,
     });
 
+  const handleInitialTargetDate = (date: Date | null) =>
+    issue?.project_id &&
+    updateIssue &&
+    updateIssue(issue.project_id, issue.id, {
+      initial_target_date: date ? (renderFormattedPayloadDate(date) ?? undefined) : undefined,
+    });
+
+  const handleEvaluatedTargetDate = (date: Date | null) =>
+    issue?.project_id &&
+    updateIssue &&
+    updateIssue(issue.project_id, issue.id, {
+      evaluated_target_date: date ? (renderFormattedPayloadDate(date) ?? undefined) : undefined,
+    });
+
   const handleEstimate = (value: string | undefined) =>
     issue?.project_id && updateIssue && updateIssue(issue.project_id, issue.id, { estimate_point: value });
 
@@ -130,16 +151,16 @@ export const DraftIssueProperties = observer(function DraftIssueProperties(props
   const maxDate = getDate(issue.target_date);
   maxDate?.setDate(maxDate.getDate());
 
-  const handleEventPropagation = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    e.preventDefault();
-  };
-
   return (
     <div className={className}>
       {/* basic properties */}
       {/* state */}
-      <div className="h-5" onClick={handleEventPropagation}>
+      <div
+        role="presentation"
+        className="h-5"
+        onClick={stopDraftPropertyRowInteraction}
+        onKeyDown={stopDraftPropertyRowInteraction}
+      >
         <StateDropdown
           buttonContainerClassName="truncate max-w-40"
           value={issue.state_id}
@@ -152,7 +173,12 @@ export const DraftIssueProperties = observer(function DraftIssueProperties(props
       </div>
 
       {/* priority */}
-      <div className="h-5" onClick={handleEventPropagation}>
+      <div
+        role="presentation"
+        className="h-5"
+        onClick={stopDraftPropertyRowInteraction}
+        onKeyDown={stopDraftPropertyRowInteraction}
+      >
         <PriorityDropdown
           value={issue?.priority}
           onChange={handlePriority}
@@ -175,7 +201,12 @@ export const DraftIssueProperties = observer(function DraftIssueProperties(props
       />
 
       {/* start date */}
-      <div className="h-5" onClick={handleEventPropagation}>
+      <div
+        role="presentation"
+        className="h-5"
+        onClick={stopDraftPropertyRowInteraction}
+        onKeyDown={stopDraftPropertyRowInteraction}
+      >
         <DateDropdown
           value={issue.start_date ?? null}
           onChange={handleStartDate}
@@ -189,13 +220,56 @@ export const DraftIssueProperties = observer(function DraftIssueProperties(props
         />
       </div>
 
+      <div
+        role="presentation"
+        className="h-5"
+        onClick={stopDraftPropertyRowInteraction}
+        onKeyDown={stopDraftPropertyRowInteraction}
+      >
+        <DateDropdown
+          value={issue.initial_target_date ?? null}
+          onChange={handleInitialTargetDate}
+          minDate={minDate}
+          maxDate={maxDate}
+          placeholder={t("initial_expected_due_date")}
+          buttonVariant={issue.initial_target_date ? "border-with-text" : "border-without-text"}
+          optionsClassName="z-10"
+          renderByDefault={isMobile}
+          showTooltip
+        />
+      </div>
+
+      <div
+        role="presentation"
+        className="h-5"
+        onClick={stopDraftPropertyRowInteraction}
+        onKeyDown={stopDraftPropertyRowInteraction}
+      >
+        <DateDropdown
+          value={issue.evaluated_target_date ?? null}
+          onChange={handleEvaluatedTargetDate}
+          minDate={minDate}
+          maxDate={maxDate}
+          placeholder={t("evaluated_due_date")}
+          buttonVariant={issue.evaluated_target_date ? "border-with-text" : "border-without-text"}
+          optionsClassName="z-10"
+          renderByDefault={isMobile}
+          showTooltip
+        />
+      </div>
+
       {/* target/due date */}
-      <div className="h-5" onClick={handleEventPropagation}>
+      <div
+        role="presentation"
+        className="h-5"
+        onClick={stopDraftPropertyRowInteraction}
+        onKeyDown={stopDraftPropertyRowInteraction}
+      >
         <DateDropdown
           value={issue?.target_date ?? null}
           onChange={handleTargetDate}
           minDate={minDate}
-          placeholder="Due date"
+          placeholder={t("confirmed_due_date")}
           icon={<DueDatePropertyIcon className="h-3 w-3 flex-shrink-0" />}
           buttonVariant={issue.target_date ? "border-with-text" : "border-without-text"}
           buttonClassName={
@@ -209,7 +283,12 @@ export const DraftIssueProperties = observer(function DraftIssueProperties(props
       </div>
 
       {/* assignee */}
-      <div className="h-5" onClick={handleEventPropagation}>
+      <div
+        role="presentation"
+        className="h-5"
+        onClick={stopDraftPropertyRowInteraction}
+        onKeyDown={stopDraftPropertyRowInteraction}
+      >
         <MemberDropdown
           projectId={issue?.project_id}
           value={issue?.assignee_ids}
@@ -227,7 +306,12 @@ export const DraftIssueProperties = observer(function DraftIssueProperties(props
 
       {/* modules */}
       {projectDetails?.module_view && (
-        <div className="h-5" onClick={handleEventPropagation}>
+        <div
+          role="presentation"
+          className="h-5"
+          onClick={stopDraftPropertyRowInteraction}
+          onKeyDown={stopDraftPropertyRowInteraction}
+        >
           <ModuleDropdown
             buttonContainerClassName="truncate max-w-40"
             projectId={issue?.project_id}
@@ -244,7 +328,12 @@ export const DraftIssueProperties = observer(function DraftIssueProperties(props
 
       {/* cycles */}
       {projectDetails?.cycle_view && (
-        <div className="h-5" onClick={handleEventPropagation}>
+        <div
+          role="presentation"
+          className="h-5"
+          onClick={stopDraftPropertyRowInteraction}
+          onKeyDown={stopDraftPropertyRowInteraction}
+        >
           <CycleDropdown
             buttonContainerClassName="truncate max-w-40"
             projectId={issue?.project_id}
@@ -259,7 +348,12 @@ export const DraftIssueProperties = observer(function DraftIssueProperties(props
 
       {/* estimates */}
       {issue.project_id && areEstimateEnabledByProjectId(issue.project_id?.toString()) && (
-        <div className="h-5" onClick={handleEventPropagation}>
+        <div
+          role="presentation"
+          className="h-5"
+          onClick={stopDraftPropertyRowInteraction}
+          onKeyDown={stopDraftPropertyRowInteraction}
+        >
           <EstimateDropdown
             value={issue.estimate_point ?? undefined}
             onChange={handleEstimate}

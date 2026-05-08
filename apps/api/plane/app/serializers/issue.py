@@ -47,6 +47,7 @@ from plane.utils.content_validator import (
     validate_html_content,
     validate_binary_data,
 )
+from plane.utils.issue_schedule_dates import validate_issue_schedule_date_order
 
 
 class IssueFlatSerializer(BaseSerializer):
@@ -61,6 +62,8 @@ class IssueFlatSerializer(BaseSerializer):
             "description_html",
             "priority",
             "start_date",
+            "initial_target_date",
+            "evaluated_target_date",
             "target_date",
             "sequence_id",
             "sort_order",
@@ -124,12 +127,7 @@ class IssueCreateSerializer(BaseSerializer):
         allow_triage = self.context.get("allow_triage_state", False)
         state_manager = State.triage_objects if allow_triage else State.objects
 
-        if (
-            attrs.get("start_date", None) is not None
-            and attrs.get("target_date", None) is not None
-            and attrs.get("start_date", None) > attrs.get("target_date", None)
-        ):
-            raise serializers.ValidationError("Start date cannot exceed target date")
+        validate_issue_schedule_date_order(attrs, self.instance)
 
         # Validate description content for security
         if "description_html" in attrs and attrs["description_html"]:

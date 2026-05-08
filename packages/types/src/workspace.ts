@@ -12,6 +12,15 @@ import type { IUser, IUserLite } from "./users";
 import type { TLoginMediums } from "./instance";
 import type { IWorkspaceViewProps } from "./view-props";
 
+/** Keys for `WorkspaceMember.job_positions` (aligned with `WORKSPACE_JOB_POSITIONS` in @plane/constants). */
+export type TWorkspaceJobPosition =
+  | "project_manager"
+  | "product_manager"
+  | "developer"
+  | "ui_designer"
+  | "qa"
+  | "operations";
+
 export enum EUserWorkspaceRoles {
   ADMIN = 20,
   MEMBER = 15,
@@ -83,6 +92,7 @@ export interface IWorkspaceMember {
   id: string;
   member: IUserLite;
   role: TUserPermissions | EUserWorkspaceRoles;
+  job_positions?: TWorkspaceJobPosition[];
   created_at?: string;
   avatar_url?: string;
   email?: string;
@@ -102,6 +112,7 @@ export interface IWorkspaceMemberMe {
   id: string;
   member: string;
   role: TUserPermissions | EUserWorkspaceRoles;
+  job_positions?: TWorkspaceJobPosition[];
   updated_at: Date;
   updated_by: string;
   view_props: IWorkspaceViewProps;
@@ -241,6 +252,44 @@ export interface IWorkspaceAnalyticsResponse {
 export type TWorkspacePaginationInfo = TPaginationInfo & {
   results: IWorkspace[];
 };
+
+export interface IWorkspaceRequirementPoolItem {
+  id: string;
+  status: number;
+  created_at: string;
+  issue_id: string;
+  issue_name: string;
+  issue_sequence_id: number;
+  project_id: string;
+  project_name: string;
+  project_identifier: string;
+}
+
+export interface IWorkspaceRequirementPoolResponse {
+  count: number;
+  results: IWorkspaceRequirementPoolItem[];
+  next_cursor: number | null;
+}
+
+export interface IWorkspaceBugPoolItem {
+  id: string;
+  name: string;
+  sequence_id: number;
+  project_id: string;
+  project_name: string;
+  project_identifier: string;
+  parent_id: string | null;
+  parent_name: string;
+  parent_sequence_id: number | null;
+  state_id: string | null;
+  priority: string;
+}
+
+export interface IWorkspaceBugPoolResponse {
+  count: number;
+  results: IWorkspaceBugPoolItem[];
+  next_cursor: number | null;
+}
 
 export interface IWorkspaceSidebarNavigationItem {
   key?: string;

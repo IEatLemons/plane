@@ -26,10 +26,7 @@ from plane.db.models import (
     User,
     EstimatePoint,
 )
-from plane.utils.content_validator import (
-    validate_html_content,
-    validate_binary_data,
-)
+from plane.utils.issue_schedule_dates import validate_issue_schedule_date_order
 
 from .base import BaseSerializer
 from .cycle import CycleLiteSerializer, CycleSerializer
@@ -72,12 +69,7 @@ class IssueSerializer(BaseSerializer):
         exclude = ["description_json", "description_stripped"]
 
     def validate(self, data):
-        if (
-            data.get("start_date", None) is not None
-            and data.get("target_date", None) is not None
-            and data.get("start_date", None) > data.get("target_date", None)
-        ):
-            raise serializers.ValidationError("Start date cannot exceed target date")
+        validate_issue_schedule_date_order(data, getattr(self, "instance", None))
 
         try:
             if data.get("description_html", None) is not None:

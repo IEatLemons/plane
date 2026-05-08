@@ -128,4 +128,5 @@ export enum EProjectFeatureKey {
   VIEWS = "views",
   PAGES = "pages",
   INTAKE = "intake",
+  BUG_POOL = "bug_pool",
 }

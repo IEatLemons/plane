@@ -10,13 +10,20 @@ import { Controller, useForm } from "react-hook-form";
 
 import { Disclosure } from "@headlessui/react";
 // plane imports
-import { ROLE, EUserPermissions, EUserPermissionsLevel, MEMBER_TRACKER_ELEMENTS } from "@plane/constants";
+import {
+  ROLE,
+  EUserPermissions,
+  EUserPermissionsLevel,
+  MEMBER_TRACKER_ELEMENTS,
+  WORKSPACE_JOB_POSITIONS,
+} from "@plane/constants";
+import { useTranslation } from "@plane/i18n";
 import { TrashIcon, SuspendedUserIcon } from "@plane/propel/icons";
 import { Pill, EPillVariant, EPillSize } from "@plane/propel/pill";
 import { TOAST_TYPE, setToast } from "@plane/propel/toast";
-import type { IUser, IWorkspaceMember } from "@plane/types";
+import type { IUser, IWorkspaceMember, TWorkspaceJobPosition } from "@plane/types";
 // plane ui
-import { CustomSelect, PopoverMenu } from "@plane/ui";
+import { CustomSelect, PopoverMenu, MultiSelectDropdown } from "@plane/ui";
 // helpers
 import { getFileURL } from "@plane/utils";
 // hooks
@@ -87,21 +94,14 @@ export function NameColumn(props: NameProps) {
                 popoverClassName="justify-end"
                 buttonClassName="outline-none	origin-center rotate-90 size-8 aspect-square flex-shrink-0 grid place-items-center opacity-0 group-hover:opacity-100 transition-opacity"
                 render={() => (
-                  <div
-                    role="button"
-                    tabIndex={0}
-                    className="flex cursor-pointer items-center gap-x-3"
+                  <button
+                    type="button"
+                    className="flex cursor-pointer items-center gap-x-3 border-none bg-transparent p-0"
                     onClick={() => setRemoveMemberModal(rowData)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        setRemoveMemberModal(rowData);
-                      }
-                    }}
                     data-ph-element={MEMBER_TRACKER_ELEMENTS.WORKSPACE_MEMBER_TABLE_CONTEXT_MENU}
                   >
                     <TrashIcon className="size-3.5 align-middle" /> {id === currentUser?.id ? "Leave " : "Remove "}
-                  </div>
+                  </button>
                 )}
               />
             )}
@@ -150,14 +150,14 @@ export const AccountTypeColumn = observer(function AccountTypeColumn(props: Acco
           name="role"
           control={control}
           rules={{ required: "Role is required." }}
-          render={({ field: { value } }) => (
+          render={({ field: { value: roleValue } }) => (
             <CustomSelect
-              value={value as EUserPermissions}
-              onChange={async (value: EUserPermissions) => {
+              value={roleValue as EUserPermissions}
+              onChange={async (newRole: EUserPermissions) => {
                 if (!workspaceSlug) return;
                 try {
                   await updateMember(workspaceSlug.toString(), rowData.member.id, {
-                    role: value as unknown as EUserPermissions,
+                    role: newRole as unknown as EUserPermissions,
                   });
                 } catch (err: unknown) {
                   const error = err as { error?: string | string[] };
@@ -189,5 +189,80 @@ export const AccountTypeColumn = observer(function AccountTypeColumn(props: Acco
         />
       )}
     </>
+  );
+});
+
+const JOB_POSITION_OPTIONS = WORKSPACE_JOB_POSITIONS.map((p) => ({
+  value: "id" as const,
+  data: { id: p },
+}));
+
+export const JobPositionsColumn = observer(function JobPositionsColumn(props: AccountTypeProps) {
+  const { rowData, workspaceSlug } = props;
+  const { t } = useTranslation();
+  const { allowPermissions } = useUserPermissions();
+  const {
+    workspace: { updateMember },
+  } = useMember();
+  const { data: currentUser } = useUser();
+  const record = rowData as unknown as IWorkspaceMember;
+  const isAdmin = allowPermissions([EUserPermissions.ADMIN], EUserPermissionsLevel.WORKSPACE);
+  const isCurrentUser = currentUser?.id === record.member?.id;
+  const isSuspended = record.is_active === false;
+  const canEdit = !isSuspended && (isAdmin || isCurrentUser);
+  const positions = (record.job_positions ?? []) as TWorkspaceJobPosition[];
+
+  if (isSuspended) {
+    return <div className="w-56 text-11 text-placeholder">—</div>;
+  }
+
+  if (!canEdit) {
+    return (
+      <div className="flex max-w-56 flex-wrap gap-1">
+        {positions.length === 0 ? (
+          <span className="text-11 text-placeholder">—</span>
+        ) : (
+          positions.map((p) => (
+            <Pill key={p} variant={EPillVariant.DEFAULT} size={EPillSize.SM} className="border-none">
+              {t(`workspace_settings.settings.members.job_positions.labels.${p}`)}
+            </Pill>
+          ))
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <MultiSelectDropdown
+      value={positions}
+      onChange={async (next) => {
+        if (!workspaceSlug || !record.member?.id) return;
+        const normalized = Array.from(new Set(next)) as TWorkspaceJobPosition[];
+        try {
+          await updateMember(workspaceSlug.toString(), record.member.id, { job_positions: normalized });
+        } catch (err: unknown) {
+          const error = err as { error?: string | string[] };
+          const errorString = Array.isArray(error?.error) ? error.error[0] : error?.error;
+          setToast({
+            type: TOAST_TYPE.ERROR,
+            title: "Error!",
+            message: errorString ?? "Failed to update job positions.",
+          });
+        }
+      }}
+      options={JOB_POSITION_OPTIONS}
+      keyExtractor={(o) => o.data.id}
+      queryArray={["id"]}
+      sortByKey="id"
+      disableSearch
+      buttonClassName="!justify-start !px-2 !py-1 text-left text-11 border border-subtle rounded-md min-w-48"
+      buttonContent={(_, vals) => (
+        <span className="text-secondary">
+          {vals?.length
+            ? `${vals.length} ${t("workspace_settings.settings.members.job_positions.selected_suffix")}`
+            : t("workspace_settings.settings.members.job_positions.choose")}
+        </span>
+      )}
+    />
   );
 });

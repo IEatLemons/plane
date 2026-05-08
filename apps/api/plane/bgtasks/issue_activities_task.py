@@ -226,6 +226,78 @@ def track_state(
         )
 
 
+# Track changes in issue initial expected target date
+def track_initial_target_date(
+    requested_data,
+    current_instance,
+    issue_id,
+    project_id,
+    workspace_id,
+    actor_id,
+    issue_activities,
+    epoch,
+):
+    if current_instance.get("initial_target_date") != requested_data.get("initial_target_date"):
+        issue_activities.append(
+            IssueActivity(
+                issue_id=issue_id,
+                actor_id=actor_id,
+                verb="updated",
+                old_value=(
+                    current_instance.get("initial_target_date")
+                    if current_instance.get("initial_target_date") is not None
+                    else ""
+                ),
+                new_value=(
+                    requested_data.get("initial_target_date")
+                    if requested_data.get("initial_target_date") is not None
+                    else ""
+                ),
+                field="initial_target_date",
+                project_id=project_id,
+                workspace_id=workspace_id,
+                comment="updated the initial expected date to",
+                epoch=epoch,
+            )
+        )
+
+
+# Track changes in issue evaluated target date
+def track_evaluated_target_date(
+    requested_data,
+    current_instance,
+    issue_id,
+    project_id,
+    workspace_id,
+    actor_id,
+    issue_activities,
+    epoch,
+):
+    if current_instance.get("evaluated_target_date") != requested_data.get("evaluated_target_date"):
+        issue_activities.append(
+            IssueActivity(
+                issue_id=issue_id,
+                actor_id=actor_id,
+                verb="updated",
+                old_value=(
+                    current_instance.get("evaluated_target_date")
+                    if current_instance.get("evaluated_target_date") is not None
+                    else ""
+                ),
+                new_value=(
+                    requested_data.get("evaluated_target_date")
+                    if requested_data.get("evaluated_target_date") is not None
+                    else ""
+                ),
+                field="evaluated_target_date",
+                project_id=project_id,
+                workspace_id=workspace_id,
+                comment="updated the evaluated date to",
+                epoch=epoch,
+            )
+        )
+
+
 # Track changes in issue target date
 def track_target_date(
     requested_data,
@@ -608,6 +680,8 @@ def update_issue_activity(
         "state_id": track_state,
         "description_html": track_description,
         "target_date": track_target_date,
+        "initial_target_date": track_initial_target_date,
+        "evaluated_target_date": track_evaluated_target_date,
         "start_date": track_start_date,
         "label_ids": track_labels,
         "assignee_ids": track_assignees,

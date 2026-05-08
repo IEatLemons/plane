@@ -27,6 +27,7 @@ from plane.utils.content_validator import (
     validate_html_content,
     validate_binary_data,
 )
+from plane.utils.issue_schedule_dates import validate_issue_schedule_date_order
 from plane.app.permissions import ROLE
 
 
@@ -69,12 +70,7 @@ class DraftIssueCreateSerializer(BaseSerializer):
         return data
 
     def validate(self, attrs):
-        if (
-            attrs.get("start_date", None) is not None
-            and attrs.get("target_date", None) is not None
-            and attrs.get("start_date", None) > attrs.get("target_date", None)
-        ):
-            raise serializers.ValidationError("Start date cannot exceed target date")
+        validate_issue_schedule_date_order(attrs, self.instance)
 
         # Validate description content for security
         if "description_html" in attrs and attrs["description_html"]:

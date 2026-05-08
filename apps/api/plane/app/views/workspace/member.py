@@ -49,9 +49,17 @@ class WorkSpaceMemberViewSet(BaseViewSet):
         # Get all active workspace members
         workspace_members = self.get_queryset()
         if workspace_member.role > 5:
-            serializer = WorkspaceMemberAdminSerializer(workspace_members, fields=("id", "member", "role"), many=True)
+            serializer = WorkspaceMemberAdminSerializer(
+                workspace_members,
+                fields=("id", "member", "role", "job_positions", "is_active"),
+                many=True,
+            )
         else:
-            serializer = WorkSpaceMemberSerializer(workspace_members, fields=("id", "member", "role"), many=True)
+            serializer = WorkSpaceMemberSerializer(
+                workspace_members,
+                fields=("id", "member", "role", "job_positions"),
+                many=True,
+            )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @allow_permission(allowed_roles=[ROLE.ADMIN, ROLE.MEMBER, ROLE.GUEST], level="WORKSPACE")
@@ -68,20 +76,39 @@ class WorkSpaceMemberViewSet(BaseViewSet):
             )
 
         if workspace_member.role > ROLE.GUEST.value:
-            serializer = WorkspaceMemberAdminSerializer(member, fields=("id", "member", "role"))
+            serializer = WorkspaceMemberAdminSerializer(
+                member, fields=("id", "member", "role", "job_positions", "is_active")
+            )
         else:
-            serializer = WorkSpaceMemberSerializer(member, fields=("id", "member", "role"))
+            serializer = WorkSpaceMemberSerializer(member, fields=("id", "member", "role", "job_positions"))
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @allow_permission(allowed_roles=[ROLE.ADMIN], level="WORKSPACE")
+    @allow_permission(allowed_roles=[ROLE.ADMIN, ROLE.MEMBER, ROLE.GUEST], level="WORKSPACE")
     def partial_update(self, request, slug, pk):
         workspace_member = WorkspaceMember.objects.get(
             pk=pk, workspace__slug=slug, member__is_bot=False, is_active=True
         )
-        if request.user.id == workspace_member.member_id:
+        requesting_workspace_member = WorkspaceMember.objects.get(
+            workspace__slug=slug, member=request.user, is_active=True
+        )
+        is_self = request.user.id == workspace_member.member_id
+
+        if is_self:
+            if "role" in request.data:
+                return Response(
+                    {"error": "You cannot update your own role"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            extra_keys = set(request.data.keys()) - {"job_positions"}
+            if extra_keys:
+                return Response(
+                    {"error": "You can only update job positions for your own membership"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        elif requesting_workspace_member.role < ROLE.ADMIN.value:
             return Response(
-                {"error": "You cannot update your own role"},
-                status=status.HTTP_400_BAD_REQUEST,
+                {"error": "Only workspace admins can update other members"},
+                status=status.HTTP_403_FORBIDDEN,
             )
 
         # If a user is moved to a guest role he can't have any other role in projects

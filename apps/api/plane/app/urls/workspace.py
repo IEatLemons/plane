@@ -38,6 +38,8 @@ from plane.app.views import (
     WorkspaceUserPreferenceViewSet,
     WorkspaceWorkReportDetailEndpoint,
     WorkspaceWorkReportEndpoint,
+    WorkspaceRequirementPoolListEndpoint,
+    WorkspaceBugPoolListEndpoint,
     WorkspaceDailyTeamDigestEndpoint,
 )
 
@@ -131,6 +133,16 @@ urlpatterns = [
         "workspaces/<str:slug>/workspace-themes/<uuid:pk>/",
         WorkspaceThemeViewSet.as_view({"get": "retrieve", "patch": "partial_update", "delete": "destroy"}),
         name="workspace-themes",
+    ),
+    path(
+        "workspaces/<str:slug>/requirement-pool/",
+        WorkspaceRequirementPoolListEndpoint.as_view(),
+        name="workspace-requirement-pool",
+    ),
+    path(
+        "workspaces/<str:slug>/bug-pool/",
+        WorkspaceBugPoolListEndpoint.as_view(),
+        name="workspace-bug-pool",
     ),
     path(
         "workspaces/<str:slug>/work-reports/",

@@ -26,6 +26,7 @@ from plane.db.models import (
     Sticky,
     WorkspaceUserPreference,
 )
+from plane.utils.workspace_job_positions import normalize_job_positions
 from plane.utils.constants import RESTRICTED_WORKSPACE_SLUGS
 from plane.utils.url import contains_url
 from plane.utils.content_validator import (
@@ -84,6 +85,12 @@ class WorkspaceLiteSerializer(BaseSerializer):
 
 class WorkSpaceMemberSerializer(DynamicBaseSerializer):
     member = UserLiteSerializer(read_only=True)
+
+    def validate_job_positions(self, value):
+        try:
+            return normalize_job_positions(value)
+        except ValueError as exc:
+            raise serializers.ValidationError(str(exc)) from exc
 
     class Meta:
         model = WorkspaceMember

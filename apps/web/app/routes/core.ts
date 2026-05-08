@@ -85,6 +85,12 @@ export const coreRoutes: RouteConfigEntry[] = [
         // Daily team report (workspace admins)
         route(":workspaceSlug/daily-report", "./(all)/[workspaceSlug]/(projects)/daily-report/page.tsx"),
 
+        // Workspace requirement pool (aggregates project intakes)
+        route(":workspaceSlug/requirement-pool", "./(all)/[workspaceSlug]/(projects)/requirement-pool/page.tsx"),
+
+        // Workspace bug pool (aggregates sub-work-items with a parent)
+        route(":workspaceSlug/bug-pool", "./(all)/[workspaceSlug]/(projects)/bug-pool/page.tsx"),
+
         // Notifications
         layout("./(all)/[workspaceSlug]/(projects)/notifications/layout.tsx", [
           route(":workspaceSlug/notifications", "./(all)/[workspaceSlug]/(projects)/notifications/page.tsx"),
@@ -228,6 +234,11 @@ export const coreRoutes: RouteConfigEntry[] = [
               "./(all)/[workspaceSlug]/(projects)/projects/(detail)/[projectId]/intake/page.tsx"
             ),
           ]),
+          // Bug pool (project-scoped view of sub-work-items)
+          route(
+            ":workspaceSlug/projects/:projectId/bug-pool",
+            "./(all)/[workspaceSlug]/(projects)/projects/(detail)/[projectId]/bug-pool/page.tsx"
+          ),
         ]),
 
         // Project Archives - Issues, Cycles, Modules

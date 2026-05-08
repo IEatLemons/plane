@@ -143,6 +143,8 @@ class Issue(ProjectBaseModel):
         default="none",
     )
     start_date = models.DateField(null=True, blank=True)
+    initial_target_date = models.DateField(null=True, blank=True)
+    evaluated_target_date = models.DateField(null=True, blank=True)
     target_date = models.DateField(null=True, blank=True)
     assignees = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
@@ -684,6 +686,8 @@ class IssueVersion(ProjectBaseModel):
         default="none",
     )
     start_date = models.DateField(null=True, blank=True)
+    initial_target_date = models.DateField(null=True, blank=True)
+    evaluated_target_date = models.DateField(null=True, blank=True)
     target_date = models.DateField(null=True, blank=True)
     assignees = ArrayField(models.UUIDField(), blank=True, default=list)
     sequence_id = models.IntegerField(default=1, verbose_name="Issue Sequence ID")
@@ -745,6 +749,8 @@ class IssueVersion(ProjectBaseModel):
                 name=issue.name,
                 priority=issue.priority,
                 start_date=issue.start_date,
+                initial_target_date=issue.initial_target_date,
+                evaluated_target_date=issue.evaluated_target_date,
                 target_date=issue.target_date,
                 assignees=list(IssueAssignee.objects.filter(issue=issue).values_list("assignee_id", flat=True)),
                 sequence_id=issue.sequence_id,

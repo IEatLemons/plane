@@ -54,6 +54,8 @@ class DraftIssue(WorkspaceBaseModel):
         default="none",
     )
     start_date = models.DateField(null=True, blank=True)
+    initial_target_date = models.DateField(null=True, blank=True)
+    evaluated_target_date = models.DateField(null=True, blank=True)
     target_date = models.DateField(null=True, blank=True)
     assignees = models.ManyToManyField(
         settings.AUTH_USER_MODEL,

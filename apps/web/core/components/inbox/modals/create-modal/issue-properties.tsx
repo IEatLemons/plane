@@ -4,10 +4,10 @@
  * See the LICENSE file for details.
  */
 
-import type { FC } from "react";
 import { useState } from "react";
 import { observer } from "mobx-react";
 import { ETabIndices } from "@plane/constants";
+import { useTranslation } from "@plane/i18n";
 import { ParentPropertyIcon } from "@plane/propel/icons";
 import type { ISearchIssueResponse, TIssue } from "@plane/types";
 import { CustomMenu } from "@plane/ui";
@@ -32,13 +32,16 @@ type TInboxIssueProperties = {
   data: Partial<TIssue>;
   handleData: (issueKey: keyof Partial<TIssue>, issueValue: Partial<TIssue>[keyof Partial<TIssue>]) => void;
   isVisible?: boolean;
+  /** When true, labels are not applied (multi-project intake); labels must be set per project in each intake queue. */
+  hideLabelSelection?: boolean;
 };
 
 export const InboxIssueProperties = observer(function InboxIssueProperties(props: TInboxIssueProperties) {
-  const { projectId, data, handleData, isVisible = false } = props;
+  const { projectId, data, handleData, isVisible = false, hideLabelSelection = false } = props;
   // hooks
   const { areEstimateEnabledByProjectId } = useProjectEstimates();
   const { isMobile } = usePlatformOS();
+  const { t } = useTranslation();
   // states
   const [parentIssueModalOpen, setParentIssueModalOpen] = useState(false);
   const [selectedParentIssue, setSelectedParentIssue] = useState<ISearchIssueResponse | undefined>(undefined);
@@ -93,14 +96,19 @@ export const InboxIssueProperties = observer(function InboxIssueProperties(props
       </div>
 
       {/* labels */}
-      <div className="h-7">
-        <IssueLabelSelect
-          value={data?.label_ids || []}
-          onChange={(labelIds) => handleData("label_ids", labelIds)}
-          projectId={projectId}
-          tabIndex={getIndex("label_ids")}
-        />
-      </div>
+      {!hideLabelSelection && (
+        <div className="h-7">
+          <IssueLabelSelect
+            value={data?.label_ids || []}
+            onChange={(labelIds) => handleData("label_ids", labelIds)}
+            projectId={projectId}
+            tabIndex={getIndex("label_ids")}
+          />
+        </div>
+      )}
+      {hideLabelSelection && (
+        <p className="w-full text-11 text-placeholder">{t("requirement_pool_multi_labels_disabled_hint")}</p>
+      )}
 
       {/* start date */}
       {isVisible && (

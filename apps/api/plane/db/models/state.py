@@ -36,6 +36,12 @@ DEFAULT_STATES = [
         "group": StateGroup.UNSTARTED.value,
     },
     {
+        "name": "Evaluating",
+        "color": "#6366F1",
+        "sequence": 30000,
+        "group": StateGroup.UNSTARTED.value,
+    },
+    {
         "name": "In Progress",
         "color": "#F59E0B",
         "sequence": 35000,

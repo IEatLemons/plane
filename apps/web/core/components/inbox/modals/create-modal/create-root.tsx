@@ -39,6 +39,8 @@ const fileService = new FileService();
 type TInboxIssueCreateRoot = {
   workspaceSlug: string;
   projectId: string;
+  /** When set (e.g. requirement pool multi-select), creates one intake issue per id. Omitted in single-project flows. */
+  submissionProjectIds?: string[];
   handleModalClose: () => void;
   isDuplicateModalOpen: boolean;
   handleDuplicateIssueModal: (value: boolean) => void;
@@ -53,11 +55,20 @@ export const defaultIssueData: Partial<TIssue> = {
   label_ids: [],
   assignee_ids: [],
   start_date: renderFormattedPayloadDate(new Date()),
+  initial_target_date: null,
+  evaluated_target_date: null,
   target_date: "",
 };
 
 export const InboxIssueCreateRoot = observer(function InboxIssueCreateRoot(props: TInboxIssueCreateRoot) {
-  const { workspaceSlug, projectId, handleModalClose, isDuplicateModalOpen, handleDuplicateIssueModal } = props;
+  const {
+    workspaceSlug,
+    projectId,
+    submissionProjectIds,
+    handleModalClose,
+    isDuplicateModalOpen,
+    handleDuplicateIssueModal,
+  } = props;
   // states
   const [uploadedAssetIds, setUploadedAssetIds] = useState<string[]>([]);
   // router
@@ -148,27 +159,81 @@ export const InboxIssueCreateRoot = observer(function InboxIssueCreateRoot(props
       return;
     }
 
-    const payload: Partial<TIssue> = {
+    const targetProjectIds = submissionProjectIds?.length ? submissionProjectIds : [projectId];
+    const isMultiProject = targetProjectIds.length > 1;
+
+    const buildPayload = (): Partial<TIssue> => ({
       name: formData.name || "",
       description_html: formData.description_html || "<p></p>",
       priority: formData.priority || "none",
       state_id: formData.state_id || "",
-      label_ids: formData.label_ids || [],
+      label_ids: isMultiProject ? [] : formData.label_ids || [],
       assignee_ids: formData.assignee_ids || [],
       target_date: formData.target_date || null,
-    };
+    });
     setFormSubmitting(true);
 
-    await createInboxIssue(workspaceSlug, projectId, payload)
-      .then(async (res) => {
+    const payload = buildPayload();
+    try {
+      if (isMultiProject) {
+        const assetIdsSnapshot = [...uploadedAssetIds];
+        const settlements = await Promise.allSettled(
+          targetProjectIds.map(async (pid) => {
+            try {
+              const res = await createInboxIssue(workspaceSlug, pid, payload);
+              if (res?.issue?.id) {
+                if (assetIdsSnapshot.length > 0) {
+                  await fileService.updateBulkProjectAssetsUploadStatus(workspaceSlug, pid, res.issue.id, {
+                    asset_ids: assetIdsSnapshot,
+                  });
+                }
+                return true;
+              }
+              return false;
+            } catch (err) {
+              console.error(err);
+              return false;
+            }
+          })
+        );
+        const success = settlements.reduce((acc, s) => acc + (s.status === "fulfilled" && s.value ? 1 : 0), 0);
         if (uploadedAssetIds.length > 0) {
-          await fileService.updateBulkProjectAssetsUploadStatus(workspaceSlug, projectId, res?.issue.id ?? "", {
+          setUploadedAssetIds([]);
+        }
+        if (success === 0) {
+          setToast({
+            type: TOAST_TYPE.ERROR,
+            title: t("error"),
+            message: t("requirement_pool_multi_create_all_failed"),
+          });
+        } else {
+          const failed = targetProjectIds.length - success;
+          setToast({
+            type: TOAST_TYPE.SUCCESS,
+            title: t("success"),
+            message:
+              failed > 0
+                ? t("requirement_pool_multi_create_partial", { success, total: targetProjectIds.length, failed })
+                : t("requirement_pool_multi_create_all_ok", { total: success }),
+          });
+          if (!createMore) {
+            handleModalClose();
+          } else {
+            descriptionEditorRef?.current?.clearEditor();
+            setFormData(defaultIssueData);
+          }
+        }
+      } else {
+        const singleId = targetProjectIds[0];
+        const res = await createInboxIssue(workspaceSlug, singleId, payload);
+        if (uploadedAssetIds.length > 0) {
+          await fileService.updateBulkProjectAssetsUploadStatus(workspaceSlug, singleId, res?.issue.id ?? "", {
             asset_ids: uploadedAssetIds,
           });
           setUploadedAssetIds([]);
         }
         if (!createMore) {
-          router.push(`/${workspaceSlug}/projects/${projectId}/intake/?currentTab=open&inboxIssueId=${res?.issue?.id}`);
+          router.push(`/${workspaceSlug}/projects/${singleId}/intake/?currentTab=open&inboxIssueId=${res?.issue?.id}`);
           handleModalClose();
         } else {
           descriptionEditorRef?.current?.clearEditor();
@@ -179,15 +244,15 @@ export const InboxIssueCreateRoot = observer(function InboxIssueCreateRoot(props
           title: `Success!`,
           message: "Work item created successfully.",
         });
-      })
-      .catch((error) => {
-        console.error(error);
-        setToast({
-          type: TOAST_TYPE.ERROR,
-          title: `Error!`,
-          message: "Some error occurred. Please try again.",
-        });
+      }
+    } catch (error) {
+      console.error(error);
+      setToast({
+        type: TOAST_TYPE.ERROR,
+        title: `Error!`,
+        message: "Some error occurred. Please try again.",
       });
+    }
     setFormSubmitting(false);
   };
 
@@ -229,19 +294,24 @@ export const InboxIssueCreateRoot = observer(function InboxIssueCreateRoot(props
                 onEnterKeyPress={() => submitBtnRef?.current?.click()}
                 onAssetUpload={(assetId) => setUploadedAssetIds((prev) => [...prev, assetId])}
               />
-              <InboxIssueProperties projectId={projectId} data={formData} handleData={handleFormData} />
+              <InboxIssueProperties
+                projectId={projectId}
+                data={formData}
+                handleData={handleFormData}
+                hideLabelSelection={Boolean(submissionProjectIds && submissionProjectIds.length > 1)}
+              />
             </div>
           </div>
           <div className="flex items-center justify-between gap-2 rounded-b-lg border-t-[0.5px] border-subtle bg-surface-1 px-5 py-4">
-            <div
-              className="inline-flex cursor-pointer items-center gap-1.5"
+            <button
+              type="button"
+              className="inline-flex cursor-pointer items-center gap-1.5 border-none bg-transparent p-0"
               onClick={() => setCreateMore((prevData) => !prevData)}
-              role="button"
               tabIndex={getIndex("create_more")}
             >
               <ToggleSwitch value={createMore} onChange={() => {}} size="sm" />
               <span className="text-11">{t("create_more")}</span>
-            </div>
+            </button>
             <div className="flex items-center gap-3">
               <Button
                 variant="secondary"

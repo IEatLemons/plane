@@ -7,6 +7,8 @@
 import { API_BASE_URL } from "@plane/constants";
 import type {
   IWorkspace,
+  IWorkspaceRequirementPoolResponse,
+  IWorkspaceBugPoolResponse,
   IWorkspaceMemberMe,
   IWorkspaceMember,
   IWorkspaceMemberInvitation,
@@ -135,6 +137,40 @@ export class WorkspaceService extends APIService {
 
   async fetchWorkspaceMembers(workspaceSlug: string): Promise<IWorkspaceMember[]> {
     return this.get(`/api/workspaces/${workspaceSlug}/members/`)
+      .then((response) => response?.data)
+      .catch((error) => {
+        throw error?.response?.data;
+      });
+  }
+
+  async fetchWorkspaceRequirementPool(
+    workspaceSlug: string,
+    params?: { status?: string; cursor?: number; per_page?: number }
+  ): Promise<IWorkspaceRequirementPoolResponse> {
+    const search = new URLSearchParams();
+    if (params?.status) search.set("status", params.status);
+    if (params?.cursor != null) search.set("cursor", String(params.cursor));
+    if (params?.per_page != null) search.set("per_page", String(params.per_page));
+    const q = search.toString();
+    const path = `/api/workspaces/${workspaceSlug}/requirement-pool${q ? `?${q}` : ""}`;
+    return this.get(path)
+      .then((response) => response?.data)
+      .catch((error) => {
+        throw error?.response?.data;
+      });
+  }
+
+  async fetchWorkspaceBugPool(
+    workspaceSlug: string,
+    params?: { project_id?: string; cursor?: number; per_page?: number }
+  ): Promise<IWorkspaceBugPoolResponse> {
+    const search = new URLSearchParams();
+    if (params?.project_id) search.set("project_id", params.project_id);
+    if (params?.cursor != null) search.set("cursor", String(params.cursor));
+    if (params?.per_page != null) search.set("per_page", String(params.per_page));
+    const q = search.toString();
+    const path = `/api/workspaces/${workspaceSlug}/bug-pool${q ? `?${q}` : ""}`;
+    return this.get(path)
       .then((response) => response?.data)
       .catch((error) => {
         throw error?.response?.data;

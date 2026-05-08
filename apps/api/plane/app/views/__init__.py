@@ -79,6 +79,8 @@ from .workspace.user import (
 )
 
 from .workspace.work_report import WorkspaceWorkReportDetailEndpoint, WorkspaceWorkReportEndpoint
+from .workspace.requirement_pool import WorkspaceRequirementPoolListEndpoint
+from .workspace.bug_pool import WorkspaceBugPoolListEndpoint
 from .workspace.daily_team_digest import WorkspaceDailyTeamDigestEndpoint
 from .workspace.estimate import WorkspaceEstimatesEndpoint
 from .workspace.module import WorkspaceModulesEndpoint

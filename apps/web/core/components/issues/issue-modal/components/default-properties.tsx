@@ -183,6 +183,46 @@ export const IssueDefaultProperties = observer(function IssueDefaultProperties(p
       />
       <Controller
         control={control}
+        name="initial_target_date"
+        render={({ field: { value, onChange } }) => (
+          <div className="h-7">
+            <DateDropdown
+              value={value}
+              onChange={(date) => {
+                onChange(date ? renderFormattedPayloadDate(date) : null);
+                handleFormChange();
+              }}
+              buttonVariant="border-with-text"
+              minDate={minDate ?? undefined}
+              maxDate={maxDate ?? undefined}
+              placeholder={t("initial_expected_due_date")}
+              tabIndex={getIndex("initial_target_date")}
+            />
+          </div>
+        )}
+      />
+      <Controller
+        control={control}
+        name="evaluated_target_date"
+        render={({ field: { value, onChange } }) => (
+          <div className="h-7">
+            <DateDropdown
+              value={value}
+              onChange={(date) => {
+                onChange(date ? renderFormattedPayloadDate(date) : null);
+                handleFormChange();
+              }}
+              buttonVariant="border-with-text"
+              minDate={minDate ?? undefined}
+              maxDate={maxDate ?? undefined}
+              placeholder={t("evaluated_due_date")}
+              tabIndex={getIndex("evaluated_target_date")}
+            />
+          </div>
+        )}
+      />
+      <Controller
+        control={control}
         name="target_date"
         render={({ field: { value, onChange } }) => (
           <div className="h-7">
@@ -194,7 +234,7 @@ export const IssueDefaultProperties = observer(function IssueDefaultProperties(p
               }}
               buttonVariant="border-with-text"
               minDate={minDate ?? undefined}
-              placeholder={t("due_date")}
+              placeholder={t("confirmed_due_date")}
               tabIndex={getIndex("target_date")}
             />
           </div>
