@@ -311,11 +311,27 @@ export default {
   requirement_pool_multi_create_partial: "已创建 {success}/{total} 个需求；{failed} 个失败（权限或项目设置）",
   bug_pool: {
     title: "Bug 池",
-    description: "汇总各项目中关联到工作项（任务）的独立缺陷记录。点击行进入缺陷详情；下方显示所属任务。",
-    empty: "暂无缺陷。请在工作项侧栏「缺陷」中，在对应任务下创建。",
+    description:
+      "汇总各项目中的独立缺陷记录；多数会关联到工作项（任务）。点击行进入缺陷详情；下方显示所属任务（若已关联）。",
+    empty: "暂无缺陷。可点击右上角「新建缺陷」，或在任意工作项侧栏「缺陷」中创建。",
     filter_project: "项目",
     all_projects: "全部项目",
     parent_work_item_hint: "所属任务",
+    create: {
+      button: "新建缺陷",
+      title: "新建缺陷",
+      description: "缺陷归属于项目；关联到某一工作项（任务）为可选项。",
+      select_project_first: "请选择项目…",
+      parent_work_item: "父工作项（任务，可选）",
+      pick_parent_button: "选择父工作项",
+      pick_project_hint: "请先选择项目。",
+      select_parent_placeholder: "按标题或编号搜索…",
+      no_parent_selected: "尚未选择工作项",
+      confirm_parent: "使用该工作项",
+      change_parent: "更换",
+      submit: "创建",
+      validation_name: "请填写缺陷标题。",
+    },
   },
   defect_panel: {
     title: "缺陷",
@@ -330,6 +346,13 @@ export default {
   defect_detail: {
     not_found: "找不到该缺陷或无权访问。",
     linked_task: "所属任务",
+    no_linked_task: "未关联工作项",
+  },
+  defect_quick_create: {
+    title: "添加缺陷",
+    description: "该缺陷将关联到当前工作项。",
+    submit: "创建",
+    menu: "添加缺陷",
   },
   projects: "项目",
   views: "视图",

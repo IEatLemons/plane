@@ -14,7 +14,7 @@ from .project import ProjectBaseModel
 
 
 class Defect(ProjectBaseModel):
-    """Independent defect record linked to a task (Issue)."""
+    """Independent defect record scoped to a project; may optionally link to a task (Issue)."""
 
     PRIORITY_CHOICES = (
         ("urgent", "Urgent"),
@@ -26,6 +26,8 @@ class Defect(ProjectBaseModel):
     task = models.ForeignKey(
         "db.Issue",
         on_delete=models.CASCADE,
+        null=True,
+        blank=True,
         related_name="defects",
     )
     state = models.ForeignKey(

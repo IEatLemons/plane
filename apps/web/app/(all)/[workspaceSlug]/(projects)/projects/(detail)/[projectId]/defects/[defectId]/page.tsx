@@ -46,7 +46,7 @@ export default function ProjectDefectDetailPage({ params }: Props) {
       ? `/${workspaceSlug}/browse/${defect.project_identifier}-${defect.task_sequence_id}`
       : defect?.task_id
         ? `/${workspaceSlug}/projects/${projectId}/issues/${defect.task_id}`
-        : "#";
+        : undefined;
 
   return (
     <>
@@ -74,10 +74,17 @@ export default function ProjectDefectDetailPage({ params }: Props) {
             <h1 className="text-20 font-semibold text-primary">{defect.name}</h1>
             <p className="text-13 text-secondary">
               {t("defect_detail.linked_task")}:{" "}
-              <Link href={taskBrowseHref} className="text-primary hover:underline">
-                {defect.task_name ?? defect.task_id}
-                {defect.task_sequence_id != null ? ` (${defect.project_identifier}-${defect.task_sequence_id})` : ""}
-              </Link>
+              {defect.task_id ? (
+                <Link
+                  href={taskBrowseHref ?? `/${workspaceSlug}/projects/${projectId}/issues/${defect.task_id}`}
+                  className="text-primary hover:underline"
+                >
+                  {defect.task_name ?? defect.task_id}
+                  {defect.task_sequence_id != null ? ` (${defect.project_identifier}-${defect.task_sequence_id})` : ""}
+                </Link>
+              ) : (
+                <span className="text-placeholder">{t("defect_detail.no_linked_task")}</span>
+              )}
             </p>
             <div
               className="prose-sm max-w-none text-primary prose"

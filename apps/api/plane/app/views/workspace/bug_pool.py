@@ -16,7 +16,7 @@ from plane.db.models import Defect, WorkspaceMember
 
 
 def _bug_pool_item(defect: Defect) -> dict:
-    task = defect.task
+    task = defect.task if defect.task_id else None
     return {
         "id": str(defect.id),
         "name": defect.name,
@@ -24,17 +24,17 @@ def _bug_pool_item(defect: Defect) -> dict:
         "project_id": str(defect.project_id),
         "project_name": defect.project.name,
         "project_identifier": defect.project.identifier,
-        "parent_id": str(task.id),
-        "parent_name": task.name,
-        "parent_sequence_id": task.sequence_id,
+        "parent_id": str(task.id) if task else None,
+        "parent_name": task.name if task else "",
+        "parent_sequence_id": task.sequence_id if task else None,
         "state_id": str(defect.state_id) if defect.state_id else None,
         "priority": defect.priority,
-        "task_id": str(task.id),
+        "task_id": str(task.id) if task else None,
     }
 
 
 class WorkspaceBugPoolListEndpoint(BaseAPIView):
-    """Aggregate defects linked to tasks (issues) across allowed projects."""
+    """Aggregate defects across allowed projects (optional parent work item)."""
 
     @allow_permission(allowed_roles=[ROLE.ADMIN, ROLE.MEMBER, ROLE.GUEST], level="WORKSPACE")
     def get(self, request, slug):

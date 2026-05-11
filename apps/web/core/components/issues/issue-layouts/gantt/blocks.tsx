@@ -125,7 +125,7 @@ export const IssueGanttBlock = observer(function IssueGanttBlock(props: Props) {
 
   const hasSubIssues = (issueDetails?.sub_issues_count ?? 0) > 0;
   const expandOpen = Boolean(ganttSubExpand?.isExpanded(issueId));
-  const showExpandStrip = !!ganttSubExpand;
+  const showExpandStrip = !!ganttSubExpand && hasSubIssues;
 
   const handleExpandStripClick = (e: MouseEvent) => {
     e.preventDefault();

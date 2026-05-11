@@ -155,11 +155,26 @@ export default {
   bug_pool: {
     title: "Bug pool",
     description:
-      "Lists defects linked to work items (tasks) across projects. Open a row for defect details; the subtitle shows the parent task.",
-    empty: "No defects yet. Create one from the Defects section in a work item's sidebar.",
+      "Lists project defects across the workspace. Many are linked to a work item (task). Open a row for defect details; the subtitle shows the parent task when set.",
+    empty: "No defects yet. Create one with New defect above, or from the Defects section in a work item sidebar.",
     filter_project: "Project",
     all_projects: "All projects",
     parent_work_item_hint: "Parent task",
+    create: {
+      button: "New defect",
+      title: "New defect",
+      description: "Defects belong to a project. Linking to a work item (task) is optional.",
+      select_project_first: "Choose project…",
+      parent_work_item: "Parent work item (optional)",
+      pick_parent_button: "Select parent work item",
+      pick_project_hint: "Choose a project first.",
+      select_parent_placeholder: "Search by title or ID…",
+      no_parent_selected: "No work item selected",
+      confirm_parent: "Use this work item",
+      change_parent: "Change",
+      submit: "Create defect",
+      validation_name: "Enter a defect title.",
+    },
   },
   defect_panel: {
     title: "Defects",
@@ -174,6 +189,13 @@ export default {
   defect_detail: {
     not_found: "This defect could not be found or you don't have access.",
     linked_task: "Linked task",
+    no_linked_task: "Not linked to a work item",
+  },
+  defect_quick_create: {
+    title: "Add defect",
+    description: "This defect will be linked to this work item.",
+    submit: "Create",
+    menu: "Add defect",
   },
   projects: "Projects",
   views: "Views",

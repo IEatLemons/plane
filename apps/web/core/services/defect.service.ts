@@ -28,7 +28,7 @@ export class DefectService extends APIService {
   async create(
     workspaceSlug: string,
     projectId: string,
-    data: Pick<IDefect, "name" | "task_id"> & Partial<Pick<IDefect, "priority" | "state_id" | "description_html">>
+    data: Pick<IDefect, "name"> & Partial<Pick<IDefect, "task_id" | "priority" | "state_id" | "description_html">>
   ): Promise<IDefect> {
     return this.post(`/api/workspaces/${workspaceSlug}/projects/${projectId}/defects/`, data)
       .then((response) => response?.data)

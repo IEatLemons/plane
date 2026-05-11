@@ -4,8 +4,8 @@
  * See the LICENSE file for details.
  */
 
-import { useMemo } from "react";
-import { XCircle, ArchiveRestoreIcon } from "lucide-react";
+import { useCallback, useMemo } from "react";
+import { XCircle, ArchiveRestoreIcon, Bug } from "lucide-react";
 // plane imports
 import { useTranslation } from "@plane/i18n";
 import { LinkIcon, CopyIcon, NewTabIcon, EditIcon, ArchiveIcon, TrashIcon } from "@plane/propel/icons";
@@ -78,6 +78,8 @@ export interface MenuItemFactoryProps {
   cycleId?: string;
   moduleId?: string;
   storeType?: EIssuesStoreType;
+  /** When set, quick actions show "Add defect" for this row */
+  openQuickCreateDefectModal?: () => void;
 }
 
 // Common action handlers hook
@@ -112,21 +114,20 @@ export const useIssueActionHandlers = (props: MenuItemFactoryProps) => {
       handleOptionalAction(handleRestore, "Restore");
       return;
     }
-    await handleRestore()
-      .then(() => {
-        setToast({
-          type: TOAST_TYPE.SUCCESS,
-          title: "Restore success",
-          message: "Your work item can be found in project work items.",
-        });
-      })
-      .catch(() => {
-        setToast({
-          type: TOAST_TYPE.ERROR,
-          title: "Error!",
-          message: "Work item could not be restored. Please try again.",
-        });
+    try {
+      await handleRestore();
+      setToast({
+        type: TOAST_TYPE.SUCCESS,
+        title: "Restore success",
+        message: "Your work item can be found in project work items.",
       });
+    } catch {
+      setToast({
+        type: TOAST_TYPE.ERROR,
+        title: "Error!",
+        message: "Work item could not be restored. Please try again.",
+      });
+    }
   };
 
   return {
@@ -156,6 +157,7 @@ export const useMenuItemFactory = (props: MenuItemFactoryProps) => {
     setArchiveIssueModal,
     setDuplicateWorkItemModal,
     handleRemoveFromView,
+    openQuickCreateDefectModal,
   } = props;
 
   const createEditMenuItem = (customEditAction?: () => void): TContextMenuItem => ({
@@ -169,6 +171,14 @@ export const useMenuItemFactory = (props: MenuItemFactoryProps) => {
         setCreateUpdateIssueModal(true);
       }),
     shouldRender: isEditingAllowed,
+  });
+
+  const createQuickAddDefectMenuItem = (): TContextMenuItem => ({
+    key: "quick-add-defect",
+    title: t("defect_quick_create.menu"),
+    icon: Bug,
+    action: () => openQuickCreateDefectModal?.(),
+    shouldRender: isEditingAllowed && !!openQuickCreateDefectModal,
   });
 
   const createCopyMenuItem = (workspaceSlug?: string): TContextMenuItem => {
@@ -254,6 +264,7 @@ export const useMenuItemFactory = (props: MenuItemFactoryProps) => {
   return {
     ...actionHandlers,
     createEditMenuItem,
+    createQuickAddDefectMenuItem,
     createCopyMenuItem,
     createOpenInNewTabMenuItem,
     createCopyLinkMenuItem,
@@ -272,6 +283,7 @@ export const useProjectIssueMenuItems = (props: MenuItemFactoryProps): TContextM
   return useMemo(
     () => [
       factory.createEditMenuItem(),
+      factory.createQuickAddDefectMenuItem(),
       factory.createCopyMenuItem(),
       factory.createOpenInNewTabMenuItem(),
       factory.createCopyLinkMenuItem(),
@@ -288,12 +300,13 @@ export const useWorkItemDetailMenuItems = (props: MenuItemFactoryProps): TContex
   return useMemo(
     () => [
       factory.createCopyMenuItem(props.workspaceSlug),
+      factory.createQuickAddDefectMenuItem(),
       factory.createOpenInNewTabMenuItem(),
       factory.createArchiveMenuItem(),
       factory.createRestoreMenuItem(),
       factory.createDeleteMenuItem(),
     ],
-    [factory]
+    [factory, props.workspaceSlug]
   );
 };
 
@@ -303,6 +316,7 @@ export const useAllIssueMenuItems = (props: MenuItemFactoryProps): TContextMenuI
   return useMemo(
     () => [
       factory.createEditMenuItem(),
+      factory.createQuickAddDefectMenuItem(),
       factory.createCopyMenuItem(),
       factory.createOpenInNewTabMenuItem(),
       factory.createCopyLinkMenuItem(),
@@ -315,18 +329,20 @@ export const useAllIssueMenuItems = (props: MenuItemFactoryProps): TContextMenuI
 
 export const useCycleIssueMenuItems = (props: MenuItemFactoryProps): TContextMenuItem[] => {
   const factory = useMenuItemFactory(props);
+  const { cycleId, issue, setCreateUpdateIssueModal, setIssueToEdit } = props;
 
-  const customEditAction = () => {
-    props.setIssueToEdit({
-      ...props.issue,
-      cycle_id: props.cycleId ?? null,
+  const customEditAction = useCallback(() => {
+    setIssueToEdit({
+      ...issue,
+      cycle_id: cycleId ?? null,
     });
-    props.setCreateUpdateIssueModal(true);
-  };
+    setCreateUpdateIssueModal(true);
+  }, [cycleId, issue, setCreateUpdateIssueModal, setIssueToEdit]);
 
   return useMemo(
     () => [
       factory.createEditMenuItem(customEditAction),
+      factory.createQuickAddDefectMenuItem(),
       factory.createCopyMenuItem(),
       factory.createOpenInNewTabMenuItem(),
       factory.createCopyLinkMenuItem(),
@@ -334,24 +350,26 @@ export const useCycleIssueMenuItems = (props: MenuItemFactoryProps): TContextMen
       factory.createArchiveMenuItem(),
       factory.createDeleteMenuItem(),
     ],
-    [factory, props.cycleId]
+    [customEditAction, factory]
   );
 };
 
 export const useModuleIssueMenuItems = (props: MenuItemFactoryProps): TContextMenuItem[] => {
   const factory = useMenuItemFactory(props);
+  const { moduleId, issue, setCreateUpdateIssueModal, setIssueToEdit } = props;
 
-  const customEditAction = () => {
-    props.setIssueToEdit({
-      ...props.issue,
-      module_ids: props.moduleId ? [props.moduleId] : [],
+  const customEditAction = useCallback(() => {
+    setIssueToEdit({
+      ...issue,
+      module_ids: moduleId ? [moduleId] : [],
     });
-    props.setCreateUpdateIssueModal(true);
-  };
+    setCreateUpdateIssueModal(true);
+  }, [issue, moduleId, setCreateUpdateIssueModal, setIssueToEdit]);
 
   return useMemo(
     () => [
       factory.createEditMenuItem(customEditAction),
+      factory.createQuickAddDefectMenuItem(),
       factory.createCopyMenuItem(),
       factory.createOpenInNewTabMenuItem(),
       factory.createCopyLinkMenuItem(),
@@ -359,7 +377,7 @@ export const useModuleIssueMenuItems = (props: MenuItemFactoryProps): TContextMe
       factory.createArchiveMenuItem(),
       factory.createDeleteMenuItem(),
     ],
-    [factory, props.moduleId]
+    [customEditAction, factory]
   );
 };
 

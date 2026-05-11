@@ -4,15 +4,17 @@
  * See the LICENSE file for details.
  */
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { omit } from "lodash-es";
 import { observer } from "mobx-react";
-import { useParams, usePathname } from "next/navigation";
-import { Ellipsis } from "lucide-react";
+import { useParams } from "next/navigation";
+import { Bug, Ellipsis } from "lucide-react";
 // plane imports
+import { useTranslation } from "@plane/i18n";
 import { ARCHIVABLE_STATE_GROUPS, EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
 import type { TIssue } from "@plane/types";
 import { EIssuesStoreType } from "@plane/types";
+import { Tooltip } from "@plane/propel/tooltip";
 import { ContextMenu, CustomMenu } from "@plane/ui";
 import { cn } from "@plane/utils";
 // hooks
@@ -20,8 +22,10 @@ import { useIssues } from "@/hooks/store/use-issues";
 import { useProject } from "@/hooks/store/use-project";
 import { useProjectState } from "@/hooks/store/use-project-state";
 import { useUserPermissions } from "@/hooks/store/user";
+import { usePlatformOS } from "@/hooks/use-platform-os";
 // plane-web components
 import { DuplicateWorkItemModal } from "@/plane-web/components/issues/issue-layouts/quick-action-dropdowns/duplicate-modal";
+import { QuickCreateDefectModal } from "@/components/defects/quick-create-defect-modal";
 // helper
 import { ArchiveIssueModal } from "../../archive-issue-modal";
 import { DeleteIssueModal } from "../../delete-issue-modal";
@@ -60,13 +64,16 @@ export const WorkItemDetailQuickActions = observer(function WorkItemDetailQuickA
   } = props;
   // router
   const { workspaceSlug } = useParams();
-  const pathname = usePathname();
+  const { t } = useTranslation();
+  const { isMobile } = usePlatformOS();
   // states
   const [createUpdateIssueModal, setCreateUpdateIssueModal] = useState(false);
   const [issueToEdit, setIssueToEdit] = useState<TIssue | undefined>(undefined);
   const [deleteIssueModal, setDeleteIssueModal] = useState(false);
   const [archiveIssueModal, setArchiveIssueModal] = useState(false);
   const [duplicateWorkItemModal, setDuplicateWorkItemModal] = useState(false);
+  const [quickCreateDefectOpen, setQuickCreateDefectOpen] = useState(false);
+  const openQuickCreateDefectModal = useCallback(() => setQuickCreateDefectOpen(true), []);
   // store hooks
   const { allowPermissions } = useUserPermissions();
   const { issuesFilter } = useIssues(EIssuesStoreType.PROJECT);
@@ -90,6 +97,8 @@ export const WorkItemDetailQuickActions = observer(function WorkItemDetailQuickA
   const isRestoringAllowed = !!issue.archived_at && isEditingAllowed;
 
   const isDeletingAllowed = isEditingAllowed;
+
+  const showQuickCreateDefectToolbar = isEditingAllowed && !isPeekMode && !issue.archived_at && !!issue.project_id;
 
   const duplicateIssuePayload = omit(
     {
@@ -147,6 +156,7 @@ export const WorkItemDetailQuickActions = observer(function WorkItemDetailQuickA
     handleArchive: customArchiveAction,
     handleRestore: customRestoreAction,
     storeType: EIssuesStoreType.PROJECT,
+    openQuickCreateDefectModal,
   };
 
   //   const MENU_ITEMS = useWorkItemDetailMenuItems(menuItemProps);
@@ -156,23 +166,18 @@ export const WorkItemDetailQuickActions = observer(function WorkItemDetailQuickA
     .map((item) => {
       // Customize edit action for work item
       if (item.key === "edit") {
-        return {
-          ...item,
-          shouldRender: isEditingAllowed && !isPeekMode,
-        };
+        return Object.assign({}, item, { shouldRender: isEditingAllowed && !isPeekMode });
       }
       // Customize delete action for work item
       if (item.key === "delete") {
-        return {
-          ...item,
-        };
+        return item;
       }
       // Hide copy link in peek mode
       if (item.key === "copy-link") {
-        return {
-          ...item,
-          shouldRender: !isPeekMode,
-        };
+        return Object.assign({}, item, { shouldRender: !isPeekMode });
+      }
+      if (item.key === "quick-add-defect") {
+        return Object.assign({}, item, { shouldRender: !isPeekMode && !issue.archived_at });
       }
       return item;
     })
@@ -181,13 +186,11 @@ export const WorkItemDetailQuickActions = observer(function WorkItemDetailQuickA
     });
 
   const CONTEXT_MENU_ITEMS = MENU_ITEMS.map(function CONTEXT_MENU_ITEMS(item) {
-    return {
-      ...item,
-
+    return Object.assign({}, item, {
       onClick: () => {
         item.action();
       },
-    };
+    });
   });
 
   return (
@@ -237,41 +240,105 @@ export const WorkItemDetailQuickActions = observer(function WorkItemDetailQuickA
           projectId={issue.project_id}
         />
       )}
+      {issue.project_id && workspaceSlug && (
+        <QuickCreateDefectModal
+          isOpen={quickCreateDefectOpen}
+          onClose={() => setQuickCreateDefectOpen(false)}
+          workspaceSlug={workspaceSlug.toString()}
+          projectId={issue.project_id}
+          issueId={issue.id}
+        />
+      )}
 
       <ContextMenu parentRef={parentRef} items={CONTEXT_MENU_ITEMS} />
-      <CustomMenu
-        ellipsis
-        placement={placements}
-        customButton={<IconButton size="lg" variant="secondary" icon={Ellipsis} />}
-        portalElement={portalElement}
-        menuItemsClassName="z-[14]"
-        maxHeight="lg"
-        closeOnSelect
-      >
-        {MENU_ITEMS.map((item) => {
-          if (item.shouldRender === false) return null;
+      <div className="flex flex-wrap items-center gap-2">
+        {showQuickCreateDefectToolbar && (
+          <Tooltip tooltipContent={t("defect_quick_create.menu")} isMobile={isMobile}>
+            <IconButton size="lg" variant="secondary" icon={Bug} onClick={openQuickCreateDefectModal} />
+          </Tooltip>
+        )}
+        <CustomMenu
+          ellipsis
+          placement={placements}
+          customButton={<IconButton size="lg" variant="secondary" icon={Ellipsis} />}
+          portalElement={portalElement}
+          menuItemsClassName="z-[14]"
+          maxHeight="lg"
+          closeOnSelect
+        >
+          {MENU_ITEMS.map((item) => {
+            if (item.shouldRender === false) return null;
 
-          // Render submenu if nestedMenuItems exist
-          if (item.nestedMenuItems && item.nestedMenuItems.length > 0) {
+            // Render submenu if nestedMenuItems exist
+            if (item.nestedMenuItems && item.nestedMenuItems.length > 0) {
+              return (
+                <CustomMenu.SubMenu
+                  key={item.key}
+                  trigger={
+                    <div className="flex items-center gap-2">
+                      {item.icon && <item.icon className={cn("h-3 w-3", item.iconClassName)} />}
+                      <h5>{item.title}</h5>
+                      {item.description && (
+                        <p
+                          className={cn("whitespace-pre-line text-tertiary", {
+                            "text-placeholder": item.disabled,
+                          })}
+                        >
+                          {item.description}
+                        </p>
+                      )}
+                    </div>
+                  }
+                  disabled={item.disabled}
+                  className={cn(
+                    "flex items-center gap-2",
+                    {
+                      "text-placeholder": item.disabled,
+                    },
+                    item.className
+                  )}
+                >
+                  {item.nestedMenuItems.map((nestedItem) => (
+                    <CustomMenu.MenuItem
+                      key={nestedItem.key}
+                      onClick={() => {
+                        nestedItem.action();
+                      }}
+                      className={cn(
+                        "flex items-center gap-2",
+                        {
+                          "text-placeholder": nestedItem.disabled,
+                        },
+                        nestedItem.className
+                      )}
+                      disabled={nestedItem.disabled}
+                    >
+                      {nestedItem.icon && <nestedItem.icon className={cn("h-3 w-3", nestedItem.iconClassName)} />}
+                      <div>
+                        <h5>{nestedItem.title}</h5>
+                        {nestedItem.description && (
+                          <p
+                            className={cn("whitespace-pre-line text-tertiary", {
+                              "text-placeholder": nestedItem.disabled,
+                            })}
+                          >
+                            {nestedItem.description}
+                          </p>
+                        )}
+                      </div>
+                    </CustomMenu.MenuItem>
+                  ))}
+                </CustomMenu.SubMenu>
+              );
+            }
+
+            // Render regular menu item
             return (
-              <CustomMenu.SubMenu
+              <CustomMenu.MenuItem
                 key={item.key}
-                trigger={
-                  <div className="flex items-center gap-2">
-                    {item.icon && <item.icon className={cn("h-3 w-3", item.iconClassName)} />}
-                    <h5>{item.title}</h5>
-                    {item.description && (
-                      <p
-                        className={cn("whitespace-pre-line text-tertiary", {
-                          "text-placeholder": item.disabled,
-                        })}
-                      >
-                        {item.description}
-                      </p>
-                    )}
-                  </div>
-                }
-                disabled={item.disabled}
+                onClick={() => {
+                  item.action();
+                }}
                 className={cn(
                   "flex items-center gap-2",
                   {
@@ -279,74 +346,26 @@ export const WorkItemDetailQuickActions = observer(function WorkItemDetailQuickA
                   },
                   item.className
                 )}
+                disabled={item.disabled}
               >
-                {item.nestedMenuItems.map((nestedItem) => (
-                  <CustomMenu.MenuItem
-                    key={nestedItem.key}
-                    onClick={() => {
-                      nestedItem.action();
-                    }}
-                    className={cn(
-                      "flex items-center gap-2",
-                      {
-                        "text-placeholder": nestedItem.disabled,
-                      },
-                      nestedItem.className
-                    )}
-                    disabled={nestedItem.disabled}
-                  >
-                    {nestedItem.icon && <nestedItem.icon className={cn("h-3 w-3", nestedItem.iconClassName)} />}
-                    <div>
-                      <h5>{nestedItem.title}</h5>
-                      {nestedItem.description && (
-                        <p
-                          className={cn("whitespace-pre-line text-tertiary", {
-                            "text-placeholder": nestedItem.disabled,
-                          })}
-                        >
-                          {nestedItem.description}
-                        </p>
-                      )}
-                    </div>
-                  </CustomMenu.MenuItem>
-                ))}
-              </CustomMenu.SubMenu>
+                {item.icon && <item.icon className={cn("h-3 w-3", item.iconClassName)} />}
+                <div>
+                  <h5>{item.title}</h5>
+                  {item.description && (
+                    <p
+                      className={cn("whitespace-pre-line text-tertiary", {
+                        "text-placeholder": item.disabled,
+                      })}
+                    >
+                      {item.description}
+                    </p>
+                  )}
+                </div>
+              </CustomMenu.MenuItem>
             );
-          }
-
-          // Render regular menu item
-          return (
-            <CustomMenu.MenuItem
-              key={item.key}
-              onClick={() => {
-                item.action();
-              }}
-              className={cn(
-                "flex items-center gap-2",
-                {
-                  "text-placeholder": item.disabled,
-                },
-                item.className
-              )}
-              disabled={item.disabled}
-            >
-              {item.icon && <item.icon className={cn("h-3 w-3", item.iconClassName)} />}
-              <div>
-                <h5>{item.title}</h5>
-                {item.description && (
-                  <p
-                    className={cn("whitespace-pre-line text-tertiary", {
-                      "text-placeholder": item.disabled,
-                    })}
-                  >
-                    {item.description}
-                  </p>
-                )}
-              </div>
-            </CustomMenu.MenuItem>
-          );
-        })}
-      </CustomMenu>
+          })}
+        </CustomMenu>
+      </div>
     </>
   );
 });

@@ -295,7 +295,7 @@ export interface IWorkspaceBugPoolResponse {
   next_cursor: number | null;
 }
 
-/** Project-scoped defect (bug) linked to a task issue. */
+/** Project-scoped defect (bug); may optionally link to a task issue. */
 export interface IDefect {
   id: string;
   name: string;
@@ -304,7 +304,7 @@ export interface IDefect {
   state_id: string | null;
   description_html: string;
   description_json: Record<string, unknown>;
-  task_id: string;
+  task_id: string | null;
   project_id: string;
   created_at: string;
   updated_at: string;

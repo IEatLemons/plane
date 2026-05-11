@@ -10,6 +10,7 @@ import type { IDefect } from "@plane/types";
 import { useTranslation } from "@plane/i18n";
 import { Button } from "@plane/propel/button";
 import { TOAST_TYPE, setToast } from "@plane/propel/toast";
+import { tryCreateDefectForTask } from "@/helpers/try-create-defect-for-task";
 import { DefectService } from "@/services/defect.service";
 import { cn } from "@plane/utils";
 
@@ -48,19 +49,21 @@ export function TaskDefectsPanel(props: Props) {
   }, [load]);
 
   const handleCreate = async () => {
-    const trimmed = name.trim();
-    if (!trimmed) return;
     setSubmitting(true);
-    try {
-      await defectService.create(workspaceSlug, projectId, { name: trimmed, task_id: issueId });
+    const result = await tryCreateDefectForTask({
+      name,
+      taskId: issueId,
+      create: (payload) => defectService.create(workspaceSlug, projectId, payload),
+    });
+    setSubmitting(false);
+    if (result.ok) {
       setName("");
       await load();
       setToast({ type: TOAST_TYPE.SUCCESS, title: t("toast.success"), message: t("defect_panel.created") });
-    } catch {
-      setToast({ type: TOAST_TYPE.ERROR, title: t("toast.error"), message: t("defect_panel.create_error") });
-    } finally {
-      setSubmitting(false);
+      return;
     }
+    if (result.reason === "empty_name") return;
+    setToast({ type: TOAST_TYPE.ERROR, title: t("toast.error"), message: t("defect_panel.create_error") });
   };
 
   return (

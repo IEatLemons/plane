@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { omit } from "lodash-es";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
@@ -21,6 +21,7 @@ import { useProjectState } from "@/hooks/store/use-project-state";
 import { useUserPermissions } from "@/hooks/store/user";
 // plane-web components
 import { DuplicateWorkItemModal } from "@/plane-web/components/issues/issue-layouts/quick-action-dropdowns/duplicate-modal";
+import { QuickCreateDefectModal } from "@/components/defects/quick-create-defect-modal";
 // helper
 import { ArchiveIssueModal } from "../../archive-issue-modal";
 import { DeleteIssueModal } from "../../delete-issue-modal";
@@ -48,6 +49,8 @@ export const ModuleIssueQuickActions = observer(function ModuleIssueQuickActions
   const [deleteIssueModal, setDeleteIssueModal] = useState(false);
   const [archiveIssueModal, setArchiveIssueModal] = useState(false);
   const [duplicateWorkItemModal, setDuplicateWorkItemModal] = useState(false);
+  const [quickCreateDefectOpen, setQuickCreateDefectOpen] = useState(false);
+  const openQuickCreateDefectModal = useCallback(() => setQuickCreateDefectOpen(true), []);
   // router
   const { workspaceSlug, moduleId } = useParams();
   // store hooks
@@ -97,6 +100,7 @@ export const ModuleIssueQuickActions = observer(function ModuleIssueQuickActions
     handleUpdate,
     handleArchive,
     storeType: EIssuesStoreType.MODULE,
+    openQuickCreateDefectModal,
   };
 
   const MENU_ITEMS = useModuleIssueMenuItems(menuItemProps);
@@ -144,6 +148,15 @@ export const ModuleIssueQuickActions = observer(function ModuleIssueQuickActions
           onClose={() => setDuplicateWorkItemModal(false)}
           workspaceSlug={workspaceSlug.toString()}
           projectId={issue.project_id}
+        />
+      )}
+      {issue.project_id && workspaceSlug && (
+        <QuickCreateDefectModal
+          isOpen={quickCreateDefectOpen}
+          onClose={() => setQuickCreateDefectOpen(false)}
+          workspaceSlug={workspaceSlug.toString()}
+          projectId={issue.project_id}
+          issueId={issue.id}
         />
       )}
 
